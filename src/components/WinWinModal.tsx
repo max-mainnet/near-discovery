@@ -641,12 +641,16 @@ const WinWin: NextPageWithLayout = (props: any) => {
         }}
       >
         <div className="flex-row">
-          <ProfileCard>
+
+          {
+            sender && <ProfileCard>
             <div className="value">6</div>
 
             <div className="description">Invited</div>
           </ProfileCard>
 
+          }
+          
           <AddressCardWrapper className="flex-row">
             <InfoCard>+Invite Friends</InfoCard>
 
