@@ -802,10 +802,6 @@ export const DesktopNavigationLeft = () => {
                   <span className="bag">{router.asPath == '/' ? visible_bag : null}</span>
                 </Link>
 
-                <Link className={`item ${router.asPath == '/WinWin' ? 'active' : ''}`} href="/WinWin">
-                  <div className="icon">{homeIcon}</div>WinWin
-                  <span className="bag">{router.asPath == '/WinWin' ? visible_bag : null}</span>
-                </Link>
 
                 <div>
                   <div
