@@ -160,7 +160,7 @@ const useActivityInfo = ()=>{
 
 return <ReactModal {...props}>
 
-<WinWin></WinWin>
+<WinWin  {...props}></WinWin>
 
 
 </ReactModal>

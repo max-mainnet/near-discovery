@@ -476,7 +476,7 @@ const useLeaderBoard = (activity_name: string, chain_id:string,typeSearch: strin
 
 
 
-const WinWin: NextPageWithLayout = () => {
+const WinWin: NextPageWithLayout = (props: any) => {
   const ethersProviderContext = useEthersProviderContext();
 
   const { provider, useConnectWallet } = ethersProviderContext;
@@ -597,7 +597,20 @@ const WinWin: NextPageWithLayout = () => {
       <AddressCardWrapper>
         <AddressCard>
           {ProfileIconGirl}
-          {sender && utils.getAddress(sender)}
+          {sender ? utils.getAddress(sender) : 
+          
+            <div
+                style={{
+                    cursor: 'pointer',
+                    
+                }}
+
+                onClick={()=>{
+                    connect();
+                    props.onRequestClose()
+                }}
+            > Connect to wallet </div>
+          }
         </AddressCard>
 
         <AddressCardShadow></AddressCardShadow>
