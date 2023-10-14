@@ -303,7 +303,7 @@ export const DesktopNavigationLeft = () => {
     } else if (name == 'allChains') {
       paths = ['allChains', 'AllChains.AllChainsPage'];
     } else if (name === 'arbitrum') {
-      paths = ['arbitrum', 'Arbitrum.Swap.Dex', 'Arbitrum.Pendle.TradeMarkets','Arbitrum.Lending'];
+      paths = ['arbitrum', 'Arbitrum.Swap.Dex', 'Arbitrum.Pendle.TradeMarkets', 'Arbitrum.Lending'];
     } else if (name === 'bsc') {
       paths = ['bsc', 'Bsc.Swap.Dex'];
     } else if (name === 'polygon') {
@@ -650,6 +650,7 @@ export const DesktopNavigationLeft = () => {
                   <div className="icon">{homeIcon}</div>
                   <span className="bag">{router.asPath == '/' ? visible_bag : null}</span>
                 </Link>
+
                 <div
                   className="hasChildBox"
                   onMouseEnter={() => {
@@ -678,7 +679,8 @@ export const DesktopNavigationLeft = () => {
                   }}
                 >
                   <div
-                    className={`item ${isActive('allChains') ||
+                    className={`item ${
+                      isActive('allChains') ||
                       isActive('near') ||
                       isActive('polygon-zkevm') ||
                       isActive('base') ||
@@ -694,9 +696,9 @@ export const DesktopNavigationLeft = () => {
                       isActive('avalanche') ||
                       isActive('linea') ||
                       isActive('metis')
-                      ? 'active'
-                      : ''
-                      }`}
+                        ? 'active'
+                        : ''
+                    }`}
                   >
                     <div className="icon">{templatesIcon}</div>
                   </div>
@@ -730,7 +732,7 @@ export const DesktopNavigationLeft = () => {
                       <span className="newIcon">{newIcon}</span>
                     </Link>
                     <Link className={`item child-item ${isActive('metis') ? 'active' : ''} `} href="/metis">
-                      Metis(2)  <span className="newIcon">{newIcon}</span>
+                      Metis(2) <span className="newIcon">{newIcon}</span>
                     </Link>
                     <Link className={`item child-item ${isActive('near') ? 'active' : ''}`} href="/near">
                       NEAR(5)
@@ -799,6 +801,12 @@ export const DesktopNavigationLeft = () => {
                   <div className="icon">{homeIcon}</div>Home
                   <span className="bag">{router.asPath == '/' ? visible_bag : null}</span>
                 </Link>
+
+                <Link className={`item ${router.asPath == '/WinWin' ? 'active' : ''}`} href="/WinWin">
+                  <div className="icon">{homeIcon}</div>WinWin
+                  <span className="bag">{router.asPath == '/WinWin' ? visible_bag : null}</span>
+                </Link>
+
                 <div>
                   <div
                     onClick={() => {

@@ -71,8 +71,8 @@ const SPECIAL_URL_MAP: { [key: string]: string } = {
   'Linea.Swap.Dex': '/linea',
   'Gnosis.Swap.Dex': '/gnosis',
   'ZkSync.Swap.Dex': '/zkSync',
-   'Avalanche.Swap.Dex': '/avalanche',
-   'Optimism.Swap.Dex': '/optimism',
+  'Avalanche.Swap.Dex': '/avalanche',
+  'Optimism.Swap.Dex': '/optimism',
 };
 
 export function DefaultLayout({ children }: Props) {
