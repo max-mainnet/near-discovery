@@ -6,11 +6,8 @@ import styled from 'styled-components';
 
 import WinWin from '@/components/WinWinModal';
 
-
 import ReactModal from 'react-modal';
 import { Modal } from '@/components/WinWInBar';
-
-
 
 const Container = styled.div`
   display: none;
@@ -416,7 +413,6 @@ export const DesktopNavigationLeft = () => {
     document.body.style.overflow = 'auto';
   }
 
-
   const [winwinOpen, setWinwinOpen] = useState(false);
 
   return (
@@ -815,25 +811,15 @@ export const DesktopNavigationLeft = () => {
                   <span className="bag">{router.asPath == '/' ? visible_bag : null}</span>
                 </Link>
 
-
-
-                <div className={`item ${winwinOpen ? 'active' : ''}`} 
-                
-                  onClick={()=>{
-
-                    
-
-                    setWinwinOpen(b=>!b);
+                <div
+                  className={`item ${winwinOpen ? 'active' : ''}`}
+                  onClick={() => {
+                    setWinwinOpen((b) => !b);
                   }}
                 >
                   <div className="icon">{homeIcon}</div>WinWin
                   <span className="bag">{winwinOpen ? visible_bag : null}</span>
-
-
-
                 </div>
-
-
 
                 <div>
                   <div
@@ -976,26 +962,22 @@ export const DesktopNavigationLeft = () => {
             </div>
           )}
 
-<Modal
-                  
-                  style={{
-                    content: {
-                      maxWidth: "fit-content",
-                      margin: "auto",
-                      background: 'transparent',
-                    },
-                    overlay: {
-                     "zIndex": 100
-                    }
-                  }}
-                  isOpen={winwinOpen}
-                  onRequestClose={
-                    ()=>{
-                      setWinwinOpen(false)
-                    }
-                  }
-                  
-                  ></Modal>
+          <Modal
+            style={{
+              content: {
+                maxWidth: 'fit-content',
+                margin: 'auto',
+                background: 'transparent',
+              },
+              overlay: {
+                zIndex: 100,
+              },
+            }}
+            isOpen={winwinOpen}
+            onRequestClose={() => {
+              setWinwinOpen(false);
+            }}
+          ></Modal>
         </Container>
       )}
     </>

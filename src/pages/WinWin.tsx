@@ -43,14 +43,12 @@ import {
   WinWinIcon,
   WinWinRealIcon,
   WinWinWrapper,
-  BgWrapper
+  BgWrapper,
 } from '@/components/WinWin/index';
 import { useEthersProviderContext } from '@/data/web3';
 import { useBosComponents } from '@/hooks/useBosComponents';
 import { useDefaultLayout } from '@/hooks/useLayout';
 import type { NextPageWithLayout } from '@/utils/types';
-
-
 
 const BigWhale = (
   <svg
@@ -60,13 +58,11 @@ const BigWhale = (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"
-
     style={{
-      position: "absolute",
+      position: 'absolute',
       right: 0,
-      top: "-30px"
+      top: '-30px',
     }}
-
   >
     <rect width="212" height="212" fill="url(#pattern02221122)" />
     <defs>
@@ -93,22 +89,19 @@ const IconRight = (
 );
 
 const RuleIconWrapper = styled.div`
-     
-cursor: pointer;
+  cursor: pointer;
 
-position: absolute;
+  position: absolute;
 
-right: 20px;
+  right: 20px;
 
+  bottom: 20px;
 
-bottom: 20px;
-
-
-font-size: 14px;
-font-weight: 500;
-line-height: 20px;
-letter-spacing: 0em;
-`
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0em;
+`;
 
 const EventContainer = styled.div`
   background: linear-gradient(0deg, #b1deff, #b1deff);
@@ -116,7 +109,7 @@ const EventContainer = styled.div`
   border: 1px solid #303030;
   width: 100%;
   height: 131px;
-  
+
   padding-left: 20px;
 
   display: flex;
@@ -147,10 +140,7 @@ const EventContainerShadow = styled.div`
 `;
 
 const CurrentEvent = () => {
-
-
-  const activity = useActivityInfo()
-
+  const activity = useActivityInfo();
 
   return (
     <div
@@ -163,102 +153,57 @@ const CurrentEvent = () => {
       <EventContainer>
         {/* put events info here */}
 
-        
-
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
-
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
           }}
         >
-
-
-          <div 
-          
+          <div
             style={{
-              fontSize:"32px",
-              fontWeight:"700",
+              fontSize: '32px',
+              fontWeight: '700',
             }}
           >
-
-            {
-              activity.title
-            }
-
-
-
-
+            {activity.title}
           </div>
 
-          <div 
-          
-          style={{
-            fontSize:"18px",
-            fontWeight:"700",
-          }}
-          
+          <div
+            style={{
+              fontSize: '18px',
+              fontWeight: '700',
+            }}
           >
-
-          ROUND 2 CAMPAIGN
-
+            ROUND 2 CAMPAIGN
           </div>
 
-          <div 
-          style={{
-            fontSize:"14px",
-            fontWeight:"700",
-          }}
+          <div
+            style={{
+              fontSize: '14px',
+              fontWeight: '700',
+            }}
           >
+            <span>{activity.start_date}</span>
 
-          <span
-          >
-          {
-            activity.start_date
-          }
-          </span>
+            <span
+              style={{
+                padding: '0px 12px',
+              }}
+            >
+              -
+            </span>
 
-          <span
-          style={{
-            padding:"0px 12px"
-          }}
-          >
-          -
-
-          </span>
-
-
-          <span>
-
-          {
-            activity.end_date
-          } 
-          </span>
-
-
-
-
-
-
+            <span>{activity.end_date}</span>
           </div>
-
-
-
-
         </div>
-
-
-        
 
         {BigWhale}
 
         <RuleIconWrapper>
-
           <span>Rule</span>
 
           {IconRight}
-
         </RuleIconWrapper>
       </EventContainer>
 
@@ -267,47 +212,35 @@ const CurrentEvent = () => {
   );
 };
 
-
 const INVITE_BASE_API_INVITE = 'https://bos-api.delink.one/api/invite/';
-
 
 const INVITE_BASE_API_INTEGRAL = 'https://bos-api.delink.one/api/integral/';
 
-
-
-
 const INVITE_LINK_SEARCH = '?invite-code=';
 
-
 const SubSubTitle = styled.div`
-  
-font-size: 16px;
-font-weight: 700;
-line-height: 23px;
-letter-spacing: 0em;
-color: white;
-position: relative;
-`
-
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 23px;
+  letter-spacing: 0em;
+  color: white;
+  position: relative;
+`;
 
 const BottomLine = styled.div`
-  
-  background: #00A3FF;
+  background: #00a3ff;
 
   width: 100%;
   height: 4px;
-position: absolute;
-bottom: -4px;
+  position: absolute;
+  bottom: -4px;
+`;
 
-
-`
-
-const dailyCheck = 
-<svg width="13" height="10" viewBox="0 0 13 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M1 5.5L4 8.5L11.5 1" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-
-
+const dailyCheck = (
+  <svg width="13" height="10" viewBox="0 0 13 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 5.5L4 8.5L11.5 1" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+);
 
 const service = {
   generate: (params: RequestInit) => fetch(INVITE_BASE_API_INVITE + 'generate', params),
@@ -316,7 +249,8 @@ const service = {
   getTaskInfo: () => fetch(INVITE_BASE_API_INTEGRAL + 'task-info'),
   getActivityInfo: () => fetch(INVITE_BASE_API_INTEGRAL + 'activity-info/2'),
   getUserTaskInfo: (sender: string) => fetch(INVITE_BASE_API_INTEGRAL + 'user-task-info/' + sender),
-  getLeaderBoard: (activity_namae: string, chain_id:string, typeSearch: string) => fetch(INVITE_BASE_API_INTEGRAL + `leaderboard-${typeSearch}/` + `${activity_namae}/` + chain_id)
+  getLeaderBoard: (activity_namae: string, chain_id: string, typeSearch: string) =>
+    fetch(INVITE_BASE_API_INTEGRAL + `leaderboard-${typeSearch}/` + `${activity_namae}/` + chain_id),
 };
 
 const utils = {
@@ -383,98 +317,78 @@ const useInviteList = (sender: string) => {
   return inviteList;
 };
 
-
-const useTaskInfo = ()=>{
+const useTaskInfo = () => {
   const [taskInfo, setTaskInfo] = useState<any[]>([]);
 
-
   useEffect(() => {
-    service.getTaskInfo().then(res=>{
-      return res.json()
-    }).then(res=>{
-      console.log('res: ', res);
+    service
+      .getTaskInfo()
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        console.log('res: ', res);
 
-      setTaskInfo(res)
-      
-    })
+        setTaskInfo(res);
+      });
   }, []);
 
+  return taskInfo;
+};
 
-  return taskInfo
-
-}
-
-const useActivityInfo = ()=>{
-
+const useActivityInfo = () => {
   const [activityInfo, setActivityInfo] = useState<any>({});
 
-
-
   useEffect(() => {
-
-    service.getActivityInfo().then(res=>{
-      return res.json()
-    }).then(res=>{
-      
-      setActivityInfo(res[0])
-
-    })
-    
+    service
+      .getActivityInfo()
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        setActivityInfo(res[0]);
+      });
   }, []);
 
+  return activityInfo;
+};
 
-  return activityInfo
-
-
-
-
-
-}
-
-
-
-
-
-const useUserTaskInfo = (sender: string)=>{
-  const [userTaskInfo, setUserTaskInfo] =useState<any[]>([])
-
+const useUserTaskInfo = (sender: string) => {
+  const [userTaskInfo, setUserTaskInfo] = useState<any[]>([]);
 
   useEffect(() => {
-    if(!sender) return;
-    service.getUserTaskInfo(sender).then(res=>{
-      return res.json()
-    }).then(res=>{
-      console.log('res: ', res);
+    if (!sender) return;
+    service
+      .getUserTaskInfo(sender)
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        console.log('res: ', res);
 
-      setUserTaskInfo(res)
-      
-    })
+        setUserTaskInfo(res);
+      });
   }, [sender]);
 
+  return userTaskInfo;
+};
 
-  return userTaskInfo
-
-}
-
-
-const useLeaderBoard = (activity_name: string, chain_id:string,typeSearch: string )=>{
+const useLeaderBoard = (activity_name: string, chain_id: string, typeSearch: string) => {
   const [leaderBoard, setLeaderBoard] = useState<any>([]);
 
   useEffect(() => {
-    if(!activity_name) return;
-    
+    if (!activity_name) return;
 
-    service.getLeaderBoard(activity_name,chain_id,typeSearch).then(res=> res.json()).then(res=>{
-      setLeaderBoard(res)
-    })
-    
-  }, [activity_name,chain_id,typeSearch]);
+    service
+      .getLeaderBoard(activity_name, chain_id, typeSearch)
+      .then((res) => res.json())
+      .then((res) => {
+        setLeaderBoard(res);
+      });
+  }, [activity_name, chain_id, typeSearch]);
 
-
-  return leaderBoard
-}
-
-
+  return leaderBoard;
+};
 
 const WinWin: NextPageWithLayout = () => {
   const ethersProviderContext = useEthersProviderContext();
@@ -484,38 +398,28 @@ const WinWin: NextPageWithLayout = () => {
 
   const [{ wallet, connecting }, connect, disconnect] = useConnectWallet();
 
-  const [leaderboardSearch, setLeaderboardSearch] = useState("all");
+  const [leaderboardSearch, setLeaderboardSearch] = useState('all');
 
+  const taskInfo = useTaskInfo();
 
-  const taskInfo = useTaskInfo()
+  const userTaskInfo = useUserTaskInfo(sender);
 
-  const userTaskInfo = useUserTaskInfo(sender)
+  const activity = useActivityInfo();
 
+  const [typeSearch, setTypeSearch] = useState('user');
 
-  const activity = useActivityInfo()
-
-
-  const [typeSearch, setTypeSearch] = useState("user");
-
-
-
-  const leaderBoard = useLeaderBoard(activity?.name, leaderboardSearch,typeSearch);
+  const leaderBoard = useLeaderBoard(activity?.name, leaderboardSearch, typeSearch);
   console.log('leaderBoard: ', leaderBoard);
 
-
-
-
-  function filterFunc(leader_item:any){
-
-    return leader_item?.report_type === typeSearch && (leaderboardSearch === leader_item.chain_id || leaderboardSearch == "all")
-
+  function filterFunc(leader_item: any) {
+    return (
+      leader_item?.report_type === typeSearch &&
+      (leaderboardSearch === leader_item.chain_id || leaderboardSearch == 'all')
+    );
   }
 
-  const displayLeaderBoard = leaderBoard.filter(filterFunc)
+  const displayLeaderBoard = leaderBoard.filter(filterFunc);
   console.log('displayLeaderBoard: ', displayLeaderBoard);
-
-
-
 
   const inviteList = useInviteList(sender);
   console.log('inviteList: ', inviteList);
@@ -523,7 +427,6 @@ const WinWin: NextPageWithLayout = () => {
   const search = useSearchParams();
 
   const search_code = search.get('invite-code');
-
 
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
@@ -548,9 +451,15 @@ const WinWin: NextPageWithLayout = () => {
       return { hours: 0, minutes: 0, seconds: 0 };
     }
 
-    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      .toString()
+      .padStart(2, '0');
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
+      .toString()
+      .padStart(2, '0');
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000)
+      .toString()
+      .padStart(2, '0');
 
     return { hours, minutes, seconds };
   }
@@ -584,465 +493,353 @@ const WinWin: NextPageWithLayout = () => {
   }, [wallet, provider]);
 
   return (
-
     <>
-    
-    <IconWrapper>
+      <IconWrapper>
         {WinWinIcon}
         {WinWinRealIcon}
       </IconWrapper>
 
       <WinWinWrapper>
-  
-      <AddressCardWrapper>
-        <AddressCard>
-          {ProfileIconGirl}
-          {sender && utils.getAddress(sender)}
-        </AddressCard>
+        <AddressCardWrapper>
+          <AddressCard>
+            {ProfileIconGirl}
+            {sender && utils.getAddress(sender)}
+          </AddressCard>
 
-        <AddressCardShadow></AddressCardShadow>
-      </AddressCardWrapper>
+          <AddressCardShadow></AddressCardShadow>
+        </AddressCardWrapper>
 
-      {!!sender && (
-        <ProfileBanner>
-          <ProfileCard>
-            <div className="value">12</div>
+        {!!sender && (
+          <ProfileBanner>
+            <ProfileCard>
+              <div className="value">12</div>
 
-            <div className="description">Current Rank</div>
-          </ProfileCard>
+              <div className="description">Current Rank</div>
+            </ProfileCard>
 
-          <ProfileCard>
-            <div className="value">100</div>
+            <ProfileCard>
+              <div className="value">100</div>
 
-            <div className="description">Score</div>
-          </ProfileCard>
-        </ProfileBanner>
-      )}
+              <div className="description">Score</div>
+            </ProfileCard>
+          </ProfileBanner>
+        )}
 
-      <div
-        className="flex-row"
-        style={{
-          width: '100%',
-          justifyContent: 'space-between',
-          paddingBottom: '30px',
-        }}
-      >
-        <div className="flex-row">
-          <ProfileCard>
-            <div className="value">6</div>
-
-            <div className="description">Invited</div>
-          </ProfileCard>
-
-          <AddressCardWrapper className="flex-row">
-            <InfoCard>+Invite Friends</InfoCard>
-
-            <InfoCardShadow></InfoCardShadow>
-          </AddressCardWrapper>
-        </div>
-
-        <div className="flex-row">
-          <AddressCardWrapper className="flex-row">
-            <InfoCard> Join a Group</InfoCard>
-
-            <InfoCardShadow></InfoCardShadow>
-          </AddressCardWrapper>
-
-          <AddressCardWrapper className="flex-row">
-            <InfoCard> + Create Group</InfoCard>
-
-            <InfoCardShadow></InfoCardShadow>
-          </AddressCardWrapper>
-        </div>
-      </div>
-
-      {/* NFT list */}
-
-      <SubContainer>
-        <SubTitle>Your Winning</SubTitle>
-
-        <NFTContainer>
-          {NFTList.map((nft) => (
-            <div key={nft.index}>
-              {' '}
-              {nft.item} <div className="nft-index"> {nft.index || '  '} &nbsp; </div>{' '}
-            </div>
-          ))}
-        </NFTContainer>
-      </SubContainer>
-
-     <CurrentEvent></CurrentEvent>
-
-   
-
-      <SubContainer>
-        <SubTitle>Leaderboard Top 10</SubTitle>
-
-        <div className="flex-row">
-
-          <div style={{
-            position: "relative"
-          }}>
-
-<AllChainCard
-  onClick={()=>{
-    setLeaderboardSearch('all')
-
-  }}
-
-  style={{
-    opacity: leaderboardSearch === 'all' ? 1: 0.3,
-  }}
-
->
-            {AllChianIcon}
-            All Networks
-          </AllChainCard>
-
-
-          {
-            leaderboardSearch === 'all' &&  <AllChainCardShadow 
-            />
-          }
-
-         
-            </div>
-       
-
-          <ChainCard
-          
-          onClick={()=>{
-    setLeaderboardSearch('Arbitrum')
-          }}
-
+        <div
+          className="flex-row"
           style={{
-            opacity: leaderboardSearch === 'Arbitrum' ? 1: 0.3,
-
+            width: '100%',
+            justifyContent: 'space-between',
+            paddingBottom: '30px',
           }}
-          
-          >
-            {ArbIcon}
-            
-            Arbitrum</ChainCard>
-
-          <ChainCard
-          
-          onClick={()=>{
-            setLeaderboardSearch('Metis')
-
-          }}
-
-          style={{
-            opacity: leaderboardSearch === 'Metis' ? 1: 0.3,
-
-          }}
-          >
-            
-              {MetisIcon}
-            
-            Metis</ChainCard>
-
-          <ChainCard
-          
-          onClick={()=>{
-            setLeaderboardSearch('Polygon')
-          }}
-
-          style={{
-            opacity: leaderboardSearch === 'Polygon' ? 1: 0.3,
-            
-          }}
-          
-          >
-            {polygonIcon}
-            
-            Polygon</ChainCard>
-        </div>
-
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "20px 0px",
-          marginTop: "20px",
-          gap: "20px",
-          cursor: "pointer"
-        }}
-        
-   
         >
+          <div className="flex-row">
+            <ProfileCard>
+              <div className="value">6</div>
 
+              <div className="description">Invited</div>
+            </ProfileCard>
 
-        <SubSubTitle className=''
-          style={{
-opacity: typeSearch === 'user' ? 1: 0.5
-          }}
+            <AddressCardWrapper className="flex-row">
+              <InfoCard>+Invite Friends</InfoCard>
 
-          onClick={()=>{
-            setTypeSearch('user')
-          }}
-        
-        
-        >
-        Single Top 10
+              <InfoCardShadow></InfoCardShadow>
+            </AddressCardWrapper>
+          </div>
 
-        {
-          typeSearch === 'user' && <BottomLine />
-        }
+          <div className="flex-row">
+            <AddressCardWrapper className="flex-row">
+              <InfoCard> Join a Group</InfoCard>
 
-           </SubSubTitle>
+              <InfoCardShadow></InfoCardShadow>
+            </AddressCardWrapper>
 
+            <AddressCardWrapper className="flex-row">
+              <InfoCard> + Create Group</InfoCard>
 
+              <InfoCardShadow></InfoCardShadow>
+            </AddressCardWrapper>
+          </div>
+        </div>
 
-           <SubSubTitle className=''
+        {/* NFT list */}
+
+        <SubContainer>
+          <SubTitle>Your Winning</SubTitle>
+
+          <NFTContainer>
+            {NFTList.map((nft) => (
+              <div key={nft.index}>
+                {' '}
+                {nft.item} <div className="nft-index"> {nft.index || '  '} &nbsp; </div>{' '}
+              </div>
+            ))}
+          </NFTContainer>
+        </SubContainer>
+
+        <CurrentEvent></CurrentEvent>
+
+        <SubContainer>
+          <SubTitle>Leaderboard Top 10</SubTitle>
+
+          <div className="flex-row">
+            <div
               style={{
-                opacity: typeSearch === 'group' ? 1: 0.5
-                          }}
-                          onClick={()=>{
-                            setTypeSearch('group')
-                          }}
-           >
-           Group Top 10
+                position: 'relative',
+              }}
+            >
+              <AllChainCard
+                onClick={() => {
+                  setLeaderboardSearch('all');
+                }}
+                style={{
+                  opacity: leaderboardSearch === 'all' ? 1 : 0.3,
+                }}
+              >
+                {AllChianIcon}
+                All Networks
+              </AllChainCard>
 
-           {
-          typeSearch === 'group' && <BottomLine />
-        }
+              {leaderboardSearch === 'all' && <AllChainCardShadow />}
+            </div>
 
-      
+            <ChainCard
+              onClick={() => {
+                setLeaderboardSearch('Arbitrum');
+              }}
+              style={{
+                opacity: leaderboardSearch === 'Arbitrum' ? 1 : 0.3,
+              }}
+            >
+              {ArbIcon}
+              Arbitrum
+            </ChainCard>
 
-           </SubSubTitle>
+            <ChainCard
+              onClick={() => {
+                setLeaderboardSearch('Metis');
+              }}
+              style={{
+                opacity: leaderboardSearch === 'Metis' ? 1 : 0.3,
+              }}
+            >
+              {MetisIcon}
+              Metis
+            </ChainCard>
 
+            <ChainCard
+              onClick={() => {
+                setLeaderboardSearch('Polygon');
+              }}
+              style={{
+                opacity: leaderboardSearch === 'Polygon' ? 1 : 0.3,
+              }}
+            >
+              {polygonIcon}
+              Polygon
+            </ChainCard>
+          </div>
 
-          
-        </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '20px 0px',
+              marginTop: '20px',
+              gap: '20px',
+              cursor: 'pointer',
+            }}
+          >
+            <SubSubTitle
+              className=""
+              style={{
+                opacity: typeSearch === 'user' ? 1 : 0.5,
+              }}
+              onClick={() => {
+                setTypeSearch('user');
+              }}
+            >
+              Single Top 10
+              {typeSearch === 'user' && <BottomLine />}
+            </SubSubTitle>
 
-       
+            <SubSubTitle
+              className=""
+              style={{
+                opacity: typeSearch === 'group' ? 1 : 0.5,
+              }}
+              onClick={() => {
+                setTypeSearch('group');
+              }}
+            >
+              Group Top 10
+              {typeSearch === 'group' && <BottomLine />}
+            </SubSubTitle>
+          </div>
 
-        <LeaderBoardTable>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th> {
-                
-                  typeSearch === 'group' ? "Group Name" : "Address"
-                }  </th>
+          <LeaderBoardTable>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th> {typeSearch === 'group' ? 'Group Name' : 'Address'} </th>
 
-              <th>Daily Task</th>
+                <th>Daily Task</th>
 
-              <th>Transaction Amount</th>
+                <th>Transaction Amount</th>
 
-              <th>Score</th>
-            </tr>
-          </thead>
+                <th>Score</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {
-            displayLeaderBoard &&  displayLeaderBoard.map((border_item:any, index:any)=>{
-                return  <tr key={index + border_item.address}>
+            <tbody>
+              {displayLeaderBoard &&
+                displayLeaderBoard.map((border_item: any, index: any) => {
+                  return (
+                    <tr key={index + border_item.address}>
                       <td
-                      
                         style={{
                           paddingLeft: '10px',
-                          paddingBottom: "10px"
+                          paddingBottom: '10px',
                         }}
                       >
+                        {index === 0 ? WhaleBadge : index === 1 ? SharkBadge : index === 2 ? DolphineBadge : ''}
 
-                        {index ===0 ? WhaleBadge : index === 1 ? SharkBadge : index === 2 ? DolphineBadge:""}
-
-
-                        {index+1}
+                        {index + 1}
                       </td>
 
                       <td
-                       style={{
-                        paddingBottom: "10px"
-                      }}
+                        style={{
+                          paddingBottom: '10px',
+                        }}
                       >
-
-
-                        { typeSearch === 'group' ? ProfileIconBoy : ProfileIconGirl}
+                        {typeSearch === 'group' ? ProfileIconBoy : ProfileIconGirl}
 
                         <span
-                                style={{
-                                  paddingBottom: "10px",
-                          paddingLeft: '10px',
-
-                                }}
+                          style={{
+                            paddingBottom: '10px',
+                            paddingLeft: '10px',
+                          }}
                         >
-                        {border_item.group_name || utils.getAddress(border_item.address)}
-
+                          {border_item.group_name || utils.getAddress(border_item.address)}
                         </span>
-
-
                       </td>
 
                       <td
-                      
-                      style={{
-                        paddingLeft: '20px',
-
-                              }} 
+                        style={{
+                          paddingLeft: '20px',
+                        }}
                       >
-
                         {dailyCheck}
-
                       </td>
 
+                      <td
+                        style={{
+                          paddingLeft: '20px',
+                        }}
+                      >
+                        {border_item.tx_count}
+                      </td>
 
                       <td
-                                      style={{
-                                paddingLeft: '20px',
-      
-                                      }} 
-                                
-                      
+                        style={{
+                          paddingLeft: '10px',
+                        }}
                       >
+                        {border_item.tx_count * 10}
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </LeaderBoardTable>
+        </SubContainer>
 
-{border_item.tx_count}
+        <SubContainer>
+          <div
+            style={{
+              display: 'flex',
+              justifyItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <SubTitle>Daily Task</SubTitle>
 
-</td>
-
-
-
-<td
-       style={{
-        paddingLeft: '10px',
-
-              }} 
-
->
-
-{border_item.tx_count * 10}
-
-</td>
-
-                  </tr>
-              })
-            }
-
-
-
-          </tbody>
-        </LeaderBoardTable>
-      </SubContainer>
-
-      <SubContainer>
-
-
-        <div style={{
-          display: 'flex',
-          justifyItems: "center",
-          justifyContent:"space-between"
-        }}>
-
-        <SubTitle>Daily Task</SubTitle>
-
-        <div 
-        
-          style={{
-            width: "200px",
-height: "29px",
-background:"rgb(65,99,145)",
-display: "flex",
-alignItems: "center",
-gap: "12px",
-justifyContent: 'center',
-padding: "0px 20px",
-
-
-          }}
-        >
-
-          <span style={{
-  color:"#FFFFFF",
-  paddingRight: "10px",
-  whiteSpace:"nowrap"
-
-
-          }}>
-          Count Down
-
-          </span>
-
-
-<span style={{
-  color:"#B1DEFF"
-}}>
-
-{`${timeLeft.hours}:${timeLeft.minutes}:${timeLeft.seconds}`}
-
-
-</span>
-
-
-
-
-        </div>
-
-
-        </div>
-
-
-        <SubSubTitle style={{
-          marginBottom: "20px"
-        }}>
-
-        Finish daily tasks to get the plus score
-
-        </SubSubTitle>
-
-        <DailyTaskList>
-          {
-
-            taskInfo && taskInfo.map(t=>{
-              
-
-              return     <DailyTaskItemContainer
-                key={t.create_at}
+            <div
+              style={{
+                width: '200px',
+                height: '29px',
+                background: 'rgb(65,99,145)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                justifyContent: 'center',
+                padding: '0px 20px',
+              }}
+            >
+              <span
+                style={{
+                  color: '#FFFFFF',
+                  paddingRight: '10px',
+                  whiteSpace: 'nowrap',
+                }}
               >
-              <DailyTaskItemNotDone>
+                Count Down
+              </span>
 
-                <LockComponent></LockComponent>
-                <span>{t.task_name}</span>
-  
-                {DailyTaskIcon}
-              </DailyTaskItemNotDone>
-  
-            </DailyTaskItemContainer>
-            })
-          }
-  
-        </DailyTaskList>
-      </SubContainer>
+              <span
+                style={{
+                  color: '#B1DEFF',
+                }}
+              >
+                {`${timeLeft.hours}:${timeLeft.minutes}:${timeLeft.seconds}`}
+              </span>
+            </div>
+          </div>
 
+          <SubSubTitle
+            style={{
+              marginBottom: '20px',
+            }}
+          >
+            Finish daily tasks to get the plus score
+          </SubSubTitle>
 
-      <SubContainer>
+          <DailyTaskList>
+            {taskInfo &&
+              taskInfo.map((t) => {
+                return (
+                  <DailyTaskItemContainer key={t.create_at}>
+                    <DailyTaskItemNotDone>
+                      <LockComponent></LockComponent>
+                      <span>{t.task_name}</span>
 
-        <SubTitle>
+                      {DailyTaskIcon}
+                    </DailyTaskItemNotDone>
+                  </DailyTaskItemContainer>
+                );
+              })}
+          </DailyTaskList>
+        </SubContainer>
 
-        Invite List
-        </SubTitle>
+        <SubContainer>
+          <SubTitle>Invite List</SubTitle>
 
+          <LeaderBoardTable>
+            <thead>
+              <tr>
+                <th>Address</th>
+                <th>Time</th>
 
+                <th>Invite Code</th>
 
-        <LeaderBoardTable>
-          <thead>
-            <tr>
-              <th>Address</th>
-              <th> 
-                
-                Time
-                  </th>
+                <th>Status</th>
 
-              <th>Invite Code</th>
+                <th>Score</th>
+              </tr>
+            </thead>
 
-              <th>Status</th>
-
-              <th>Score</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {/* {
+            <tbody>
+              {/* {
               inviteList.map((item:any, index:any)=>{
                 return  <tr key={index + border_item.address}>
                       <td
@@ -1129,19 +926,11 @@ padding: "0px 20px",
               })
             }
  */}
-
-
-          </tbody>
-        </LeaderBoardTable>
-
-
-
-      </SubContainer>
-
-    </WinWinWrapper>
+            </tbody>
+          </LeaderBoardTable>
+        </SubContainer>
+      </WinWinWrapper>
     </>
-
-
   );
 };
 
