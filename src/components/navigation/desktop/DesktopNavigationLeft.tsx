@@ -3,6 +3,15 @@ import { useRouter } from 'next/router';
 import path from 'path';
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
+
+import WinWin from '@/components/WinWinModal';
+
+
+import ReactModal from 'react-modal';
+import { Modal } from '@/components/WinWInBar';
+
+
+
 const Container = styled.div`
   display: none;
   position: relative;
@@ -406,6 +415,10 @@ export const DesktopNavigationLeft = () => {
     set_show_menu_list(false);
     document.body.style.overflow = 'auto';
   }
+
+
+  const [winwinOpen, setWinwinOpen] = useState(false);
+
   return (
     <>
       {isMobile ? (
@@ -803,6 +816,25 @@ export const DesktopNavigationLeft = () => {
                 </Link>
 
 
+
+                <div className={`item ${winwinOpen ? 'active' : ''}`} 
+                
+                  onClick={()=>{
+
+                    
+
+                    setWinwinOpen(b=>!b);
+                  }}
+                >
+                  <div className="icon">{homeIcon}</div>WinWin
+                  <span className="bag">{winwinOpen ? visible_bag : null}</span>
+
+
+
+                </div>
+
+
+
                 <div>
                   <div
                     onClick={() => {
@@ -943,6 +975,27 @@ export const DesktopNavigationLeft = () => {
               </div>
             </div>
           )}
+
+<Modal
+                  
+                  style={{
+                    content: {
+                      maxWidth: "fit-content",
+                      margin: "auto",
+                      background: 'transparent',
+                    },
+                    overlay: {
+                     "zIndex": 100
+                    }
+                  }}
+                  isOpen={winwinOpen}
+                  onRequestClose={
+                    ()=>{
+                      setWinwinOpen(false)
+                    }
+                  }
+                  
+                  ></Modal>
         </Container>
       )}
     </>

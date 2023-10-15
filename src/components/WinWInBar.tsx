@@ -155,7 +155,7 @@ const useActivityInfo = ()=>{
   
   
 
-  const Modal = (props: any & ReactModal.Props )=>{
+export const Modal = (props: any & ReactModal.Props )=>{
 
 
 return <ReactModal {...props}>
@@ -261,6 +261,22 @@ return  <>
             </WinWinBarItem>
         })
     }
+
+
+    <span
+    
+      style={{
+        color: "black",
+        fontSize: "12px",
+        cursor: "pointer",
+        fontWeight: "bold"
+      }}
+    >
+
+
+    ...Click to see more
+
+    </span>
 
     
 

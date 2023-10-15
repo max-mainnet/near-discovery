@@ -17,6 +17,7 @@ interface Props {
 const Layout = styled.div`
   background: #1e202f;
   display: flex;
+  margin-top: 40px;
   .content {
     padding: 54px 36px;
     flex-grow: 1;
