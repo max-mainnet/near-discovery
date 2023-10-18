@@ -10,7 +10,8 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
-import { useEffect } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import styled from 'styled-components';
 
 import { Toaster } from '@/components/lib/Toast';
 import { useBosLoaderInitializer } from '@/hooks/useBosLoaderInitializer';
@@ -21,6 +22,8 @@ import { useAuthStore } from '@/stores/auth';
 import { init as initializeAnalytics } from '@/utils/analytics';
 import type { NextPageWithLayout } from '@/utils/types';
 import { styleZendesk } from '@/utils/zendesk';
+import { useEthersProviderContext } from '@/data/web3';
+import { useSignInRedirect } from '@/hooks/useSignInRedirect';
 
 const VmInitializer = dynamic(() => import('../components/vm/VmInitializer'), {
   ssr: false,
@@ -29,6 +32,15 @@ const VmInitializer = dynamic(() => import('../components/vm/VmInitializer'), {
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
+
+// const VerificationCode = styled.div`
+//   position: fixed;
+//   top: 50%;
+//   right: 50%;
+//   background-color: pink;
+//   padding: 24px;
+//   border-radius: 12px;
+// `
 
 export default function App({ Component, pageProps }: AppPropsWithLayout) {
   useBosLoaderInitializer();
@@ -39,6 +51,49 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   const router = useRouter();
   const authStore = useAuthStore();
   const componentSrc = router.query;
+
+  // const { requestAuthentication } = useSignInRedirect();
+
+  // const { useConnectWallet } = useEthersProviderContext();
+  // const [{ wallet, connecting }, connect, disconnect] = useConnectWallet();
+
+  // const [inputData, setInputData] = useState('');
+
+  // const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  //   setInputData(e.target.value);
+  // };
+
+  // const handleActivation = () => {
+  //   console.log('邀请码', inputData)
+  //   if (inputData.trim() === '') {
+  //     alert('邀请码不能为空');
+  //     return;
+  //   }
+  //   if (inputData.length > 8) {
+  //     alert('邀请码不能超过8位');
+  //     return;
+  //   }
+  //   const regex = /^[a-zA-Z0-9]+$/;
+  //   if (!regex.test(inputData)) {
+  //     alert('邀请码必须由数字和字母组成');
+  //     return;
+  //   }
+  //   fetch('/api/invite/activate', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({ inviteCode: inputData }),
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       console.log(data);
+  //     })
+  //     .catch((error) => {
+  //       console.error(error);
+  //     });
+  // };
+
 
   useEffect(() => {
     initializeAnalytics();
@@ -135,9 +190,23 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
 
       <VmInitializer />
 
+      {/* 邀请 */}
+      {/* <VerificationCode>
+        <div
+          onClick={() => {
+            connect();
+          }}
+          style={{ marginBottom: '24px', cursor: 'pointer' }}
+        >
+          Connect
+        </div>
+        <input type="text" value={inputData} onChange={handleInputChange} style={{ marginRight: '14px' }} />
+        <button onClick={handleActivation}>激活</button>
+      </VerificationCode> */}
+
       {getLayout(<Component {...pageProps} />)}
 
-      <Toaster />
+
     </>
   );
 }
