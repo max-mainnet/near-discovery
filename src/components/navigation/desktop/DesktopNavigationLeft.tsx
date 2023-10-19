@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import path from 'path';
-import { useEffect, useState } from 'react';
+import { SetStateAction, SetStateAction, useEffect, useState } from 'react';
 import styled from 'styled-components';
 const Container = styled.div`
   display: none;
@@ -82,7 +82,8 @@ const Container = styled.div`
     padding: 24px 0 18px 30px;
   }
   .small .item {
-    padding-left: 0;
+    padding-left: 20px;
+    width: 60px;
   }
   .small .item.active {
     background: transparent;
@@ -100,18 +101,21 @@ const Container = styled.div`
     width: 100%;
   }
   .small .active .bag {
-    right: -16px;
+    right: 0;
     top: 5px;
   }
   .small .childBox {
     position: absolute;
-    left: 80px;
+    left: 62px;
     top: 0;
     width: 200px;
     background-color: #373a53;
     border-radius: 16px;
     padding: 10px 10px 4px 10px;
     box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.25);
+    .item{
+      width: 100%;
+    }
     .child-item {
       white-space: nowrap;
       height: 46px;
@@ -259,11 +263,10 @@ export const DesktopNavigationLeft = () => {
   const [showChildBox, setShowChildBox] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [openChains, setOpenChains] = useState(false);
-  const [openChainsPc, setOpenChainsPc] = useState(false);
   const [showWarmBox, setShowWarmBox] = useState(false);
-  const [openWarmPc, setOpenWarmPc] = useState(false);
-
   const [show_menu_list, set_show_menu_list] = useState(false);
+
+
 
   const router = useRouter();
 
@@ -280,50 +283,7 @@ export const DesktopNavigationLeft = () => {
       setIsMobile(true);
     }
   }, []);
-  function isActive(name: string) {
-    let paths: string[] = [];
-    if (name == 'near') {
-      paths = ['ref-home', 'xBox', 'near', 'MetaPool.Stake'];
-    } else if (name == 'polygon-zkevm') {
-      paths = [
-        'ZKEVMSwap.zkevm-swap',
-        'ZKEVM-all-in-one',
-        'ZKEVMSwap.zkevm-bridge',
-        'ZKEVM.GAMMA',
-        'ZKEVM.AAVE',
-        'polygon-zkevm',
-        '0vix.Lending',
-      ];
-    } else if (name == 'base') {
-      paths = ['Base.BaseDex', 'base'];
-    } else if (name === 'mantle') {
-      paths = ['mantle', 'Mantle.Swap'];
-    } else if (name == 'warmup') {
-      paths = ['ZKEVM.ExecuteRecords', 'ZKEVM.QuestionList', 'warmup'];
-    } else if (name == 'allChains') {
-      paths = ['allChains', 'AllChains.AllChainsPage'];
-    } else if (name === 'arbitrum') {
-      paths = ['arbitrum', 'Arbitrum.Swap.Dex', 'Arbitrum.Pendle.TradeMarkets', 'Arbitrum.Lending'];
-    } else if (name === 'bsc') {
-      paths = ['bsc', 'Bsc.Swap.Dex'];
-    } else if (name === 'polygon') {
-      paths = ['polygon', 'Polygon.Swap.Dex'];
-    } else if (name === 'linea') {
-      paths = ['linea', 'Linea.Swap.Dex'];
-    } else if (name === 'metis') {
-      paths = ['metis', 'Metis.Swap.Dex'];
-    } else if (name === 'gnosis') {
-      paths = ['gnosis', 'Gnosis.Swap.Dex'];
-    } else if (name === 'zkSync') {
-      paths = ['zkSync', 'zkSync.Swap.Dex'];
-    } else if (name === 'avalanche') {
-      paths = ['avalanche', 'Avalanche.Lending'];
-    } else if (name === 'optimism') {
-      paths = ['optimism', 'Optimism.Lending'];
-    }
-    const r = router.asPath.split('/').pop() || '';
-    return paths.includes(r);
-  }
+
   const visible_bag = (
     <svg width="17" height="19" viewBox="0 0 17 19" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect
@@ -382,35 +342,142 @@ export const DesktopNavigationLeft = () => {
     </svg>
   );
 
-  const nearActive =
-    isActive('near') ||
-    isActive('polygon-zkevm') ||
-    isActive('base') ||
-    isActive('mantle') ||
-    isActive('allChains') ||
-    isActive('arbitrum') ||
-    isActive('bsc') ||
-    isActive('gnosis') ||
-    isActive('zkSync') ||
-    isActive('avalanche') ||
-    isActive('optimism') ||
-    isActive('polygon') ||
-    isActive('linea') ||
-    isActive('metis');
-  const warmActive = isActive('warmup');
-  function openMenu() {
-    set_show_menu_list(true);
-    document.body.style.overflow = 'hidden';
+  function isActive(path: string) {
+    return router.asPath === path;
   }
+
+  const menuData = [
+    {
+      title: 'home',
+      href: '/',
+      icon: homeIcon,
+      new: false,
+    },
+    {
+      title: 'Warm up',
+      icon: zkevmIcon,
+      children: [
+        {
+          title: 'Polygon zkEVM',
+          href: '/warmup',
+          new: false,
+        },
+      ],
+    },
+    {
+      title: 'Chains',
+      icon: templatesIcon,
+      children: [
+        {
+          title: 'All Chains',
+          href: '/allChains',
+          new: false,
+        },
+        {
+          title: 'Arbitrum(10)',
+          href: '/arbitrum',
+          new: true,
+        },
+      ],
+    },
+  ];
+
+  const [openChildrenPc, setOpenChildrenPc] = useState(Array(menuData.length).fill(false));
+  const [activeIndex, setActiveIndex] = useState(null);
+
+  const toggleSubMenu = (parentIndex: number) => {
+    setOpenChildrenPc((prevState) => {
+      const newState = [...prevState];
+      newState[parentIndex] = !newState[parentIndex];
+      return newState.map((state, index) => (index === parentIndex ? state : false)); // 将除了当前选中的一级菜单外的其他一级菜单设置为未选中状态
+    });
+  
+    setActiveIndex(parentIndex);
+  };
+  
+  const handleChildItemClick = (parentIndex: number | SetStateAction<null>) => {
+    setActiveIndex(parentIndex); // 选中一级菜单
+  };
+  
+  
+  // function isActive(name: string) {
+  //   let paths: string[] = [];
+  //   if (name == 'near') {
+  //     paths = ['ref-home', 'xBox', 'near', 'MetaPool.Stake'];
+  //   } else if (name == 'polygon-zkevm') {
+  //     paths = [
+  //       'ZKEVMSwap.zkevm-swap',
+  //       'ZKEVM-all-in-one',
+  //       'ZKEVMSwap.zkevm-bridge',
+  //       'ZKEVM.GAMMA',
+  //       'ZKEVM.AAVE',
+  //       'polygon-zkevm',
+  //       '0vix.Lending',
+  //     ];
+  //   } else if (name == 'base') {
+  //     paths = ['Base.BaseDex', 'base'];
+  //   } else if (name === 'mantle') {
+  //     paths = ['mantle', 'Mantle.Swap'];
+  //   } else if (name == 'warmup') {
+  //     paths = ['ZKEVM.ExecuteRecords', 'ZKEVM.QuestionList', 'warmup'];
+  //   } else if (name == 'allChains') {
+  //     paths = ['allChains', 'AllChains.AllChainsPage'];
+  //   } else if (name === 'arbitrum') {
+  //     paths = ['arbitrum', 'Arbitrum.Swap.Dex', 'Arbitrum.Pendle.TradeMarkets', 'Arbitrum.Lending'];
+  //   } else if (name === 'bsc') {
+  //     paths = ['bsc', 'Bsc.Swap.Dex'];
+  //   } else if (name === 'polygon') {
+  //     paths = ['polygon', 'Polygon.Swap.Dex'];
+  //   } else if (name === 'linea') {
+  //     paths = ['linea', 'Linea.Swap.Dex'];
+  //   } else if (name === 'metis') {
+  //     paths = ['metis', 'Metis.Swap.Dex'];
+  //   } else if (name === 'gnosis') {
+  //     paths = ['gnosis', 'Gnosis.Swap.Dex'];
+  //   } else if (name === 'zkSync') {
+  //     paths = ['zkSync', 'zkSync.Swap.Dex'];
+  //   } else if (name === 'avalanche') {
+  //     paths = ['avalanche', 'Avalanche.Lending'];
+  //   } else if (name === 'optimism') {
+  //     paths = ['optimism', 'Optimism.Lending'];
+  //   }
+  //   const r = router.asPath.split('/').pop() || '';
+  //   return paths.includes(r);
+  // }
+
+  // const nearActive =
+  //   isActive('near') ||
+  //   isActive('polygon-zkevm') ||
+  //   isActive('base') ||
+  //   isActive('mantle') ||
+  //   isActive('allChains') ||
+  //   isActive('arbitrum') ||
+  //   isActive('bsc') ||
+  //   isActive('gnosis') ||
+  //   isActive('zkSync') ||
+  //   isActive('avalanche') ||
+  //   isActive('optimism') ||
+  //   isActive('polygon') ||
+  //   isActive('linea') ||
+  //   isActive('metis');
+  // const warmActive = isActive('warmup');
+  // function openMenu() {
+  //   set_show_menu_list(true);
+  //   document.body.style.overflow = 'hidden';
+  // }
+
+
+
   function closeMenu() {
     set_show_menu_list(false);
     document.body.style.overflow = 'auto';
   }
+
   return (
     <>
       {isMobile ? (
         <ContainerMobile>
-          <div className="top_menu_icon">
+          {/* <div className="top_menu_icon">
             {shanshanLogo}
             <span className="right_p" onClick={openMenu}>
               {m_menuIcon}
@@ -597,7 +664,7 @@ export const DesktopNavigationLeft = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </ContainerMobile>
       ) : (
         <Container style={{ width: putMenu ? '80px' : '260px', padding: putMenu ? '10px 0' : '10px' }}>
@@ -621,7 +688,8 @@ export const DesktopNavigationLeft = () => {
           {putMenu ? (
             <div className="small">
               <div className="logo">{shanshanPutLogo}</div>
-              <div className="menu">
+
+              {/* <div className="menu">
                 <Link className={`item ${router.asPath == '/' ? 'active' : ''}`} href="/">
                   <div className="icon">{homeIcon}</div>
                   <span className="bag">{router.asPath == '/' ? visible_bag : null}</span>
@@ -654,8 +722,7 @@ export const DesktopNavigationLeft = () => {
                   }}
                 >
                   <div
-                    className={`item ${
-                      isActive('allChains') ||
+                    className={`item ${isActive('allChains') ||
                       isActive('near') ||
                       isActive('polygon-zkevm') ||
                       isActive('base') ||
@@ -671,9 +738,9 @@ export const DesktopNavigationLeft = () => {
                       isActive('avalanche') ||
                       isActive('linea') ||
                       isActive('metis')
-                        ? 'active'
-                        : ''
-                    }`}
+                      ? 'active'
+                      : ''
+                      }`}
                   >
                     <div className="icon">{templatesIcon}</div>
                   </div>
@@ -766,12 +833,60 @@ export const DesktopNavigationLeft = () => {
                     </Link>
                   </div>
                 </div>
+              </div> */}
+
+
+              <div className="menu">
+                {menuData.map((menuItem, index) => (
+                  <div key={menuItem.title}>
+                    {menuItem.href ? (
+                      <Link
+                        className={`item ${isActive(menuItem.href) ? 'active' : ''}`}
+                        href={menuItem.href}
+                      >
+                        <div className="icon">{menuItem.icon}</div>
+                        <span className="bag">{isActive(menuItem.href) ? visible_bag : null}</span>
+                      </Link>
+                    ) : (
+                      <div
+                        className={`item parentItem ${menuItem.children ? 'hasChildren' : ''} ${openChildrenPc[index] || activeIndex === index ? 'active' : ''
+                          }`}
+                        onMouseEnter={() => toggleSubMenu(index)}
+                        onMouseLeave={() => toggleSubMenu(index)}
+                      >
+                        <div
+                          className={`icon ${menuItem.children ? 'hasChildren' : ''} ${openChildrenPc[index] || activeIndex === index ? 'active' : ''
+                            }`}
+                        >
+                          {menuItem.icon}
+                          <span className="bag">{openChildrenPc[index] || activeIndex === index ? visible_bag : null}</span>
+                        </div>
+                        {menuItem.children && openChildrenPc[index] && (
+                          <div className="childBox">
+                            {menuItem.children.map((childItem, childIndex) => (
+                              <Link
+                                key={childItem.title}
+                                className={`item child-item ${isActive(childItem.href) ? 'active' : ''}`}
+                                href={childItem.href}
+                                onClick={() => handleChildItemClick(index)}
+                              >
+                                {childItem.title}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
+
+
             </div>
           ) : (
             <div>
               <div className="logo">{shanshanLogo}</div>
-              <div className="menu">
+              {/* <div className="menu">
                 <Link className={`item ${router.asPath == '/' ? 'active' : ''}`} href="/">
                   <div className="icon">{homeIcon}</div>Home
                   <span className="bag">{router.asPath == '/' ? visible_bag : null}</span>
@@ -913,7 +1028,56 @@ export const DesktopNavigationLeft = () => {
                     </Link>
                   </div>
                 </div>
+              </div> */}
+
+
+              <div className="menu">
+                {menuData.map((menuItem, index) => (
+                  <div key={menuItem.title}>
+                    {menuItem.href ? (
+                      <Link className={`item ${isActive(menuItem.href) ? 'active' : ''}`} href={menuItem.href}>
+                        <div className={`icon ${isActive(menuItem.href) ? 'active' : ''}`}>{menuItem.icon}</div>
+                        {menuItem.title}
+                        {!menuItem.children && isActive(menuItem.href) && (
+                          <span className="bag">{visible_bag}</span>
+                        )}
+                      </Link>
+                    ) : (
+                      <div
+                        onClick={() => toggleSubMenu(index)}
+                        className={`item parentItem ${menuItem.children && menuItem.children.some(childItem => isActive(childItem.href)) ? 'active' : ''}`}
+                      >
+                        <div className={`icon ${menuItem.children && menuItem.children.some(childItem => isActive(childItem.href)) ? 'active' : ''}`}>{menuItem.icon}</div>
+                        {menuItem.title}
+                        <ArrowPcIcon
+                          className="arrow"
+                          style={{
+                            transform: openChildrenPc[index] ? '' : 'rotate(180deg)',
+                          }}
+                        ></ArrowPcIcon>
+                      </div>
+                    )}
+                    {menuItem.children && openChildrenPc[index] ? (
+                      <div className={`${openChildrenPc[index] ? 'show' : 'hidden'}`}>
+                        {menuItem.children.map((childItem) => (
+                          <Link
+                            key={childItem.title}
+                            className={`item child-item ${isActive(childItem.href) ? 'active' : ''}`}
+                            href={childItem.href}
+                          >
+                            {childItem.title}
+                            {childItem.new ? <span className="newIcon">{newIcon}</span> : null}
+                            {isActive(childItem.href) ? <span className="bag">{visible_bag}</span> : null}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
               </div>
+
+
+
             </div>
           )}
         </Container>
