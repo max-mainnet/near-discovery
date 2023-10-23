@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import path from 'path';
-import { SetStateAction, SetStateAction, useEffect, useState } from 'react';
+import React from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 const Container = styled.div`
   display: none;
@@ -106,14 +107,14 @@ const Container = styled.div`
   }
   .small .childBox {
     position: absolute;
-    left: 62px;
+    left: 80px;
     top: 0;
     width: 200px;
     background-color: #373a53;
     border-radius: 16px;
     padding: 10px 10px 4px 10px;
     box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.25);
-    .item{
+    .item {
       width: 100%;
     }
     .child-item {
@@ -266,8 +267,6 @@ export const DesktopNavigationLeft = () => {
   const [showWarmBox, setShowWarmBox] = useState(false);
   const [show_menu_list, set_show_menu_list] = useState(false);
 
-
-
   const router = useRouter();
 
   useEffect(() => {
@@ -342,6 +341,9 @@ export const DesktopNavigationLeft = () => {
     </svg>
   );
 
+  const [activeParentIndex, setActiveParentIndex] = useState<number | null>(null);
+  const [activeChildIndex, setActiveChildIndex] = useState<number | null>(null);
+
   function isActive(path: string) {
     return router.asPath === path;
   }
@@ -383,7 +385,6 @@ export const DesktopNavigationLeft = () => {
   ];
 
   const [openChildrenPc, setOpenChildrenPc] = useState(Array(menuData.length).fill(false));
-  const [activeIndex, setActiveIndex] = useState(null);
 
   const toggleSubMenu = (parentIndex: number) => {
     setOpenChildrenPc((prevState) => {
@@ -391,15 +392,8 @@ export const DesktopNavigationLeft = () => {
       newState[parentIndex] = !newState[parentIndex];
       return newState.map((state, index) => (index === parentIndex ? state : false)); // 将除了当前选中的一级菜单外的其他一级菜单设置为未选中状态
     });
-  
-    setActiveIndex(parentIndex);
   };
-  
-  const handleChildItemClick = (parentIndex: number | SetStateAction<null>) => {
-    setActiveIndex(parentIndex); // 选中一级菜单
-  };
-  
-  
+
   // function isActive(name: string) {
   //   let paths: string[] = [];
   //   if (name == 'near') {
@@ -465,8 +459,6 @@ export const DesktopNavigationLeft = () => {
   //   set_show_menu_list(true);
   //   document.body.style.overflow = 'hidden';
   // }
-
-
 
   function closeMenu() {
     set_show_menu_list(false);
@@ -722,7 +714,8 @@ export const DesktopNavigationLeft = () => {
                   }}
                 >
                   <div
-                    className={`item ${isActive('allChains') ||
+                    className={`item ${
+                      isActive('allChains') ||
                       isActive('near') ||
                       isActive('polygon-zkevm') ||
                       isActive('base') ||
@@ -738,9 +731,9 @@ export const DesktopNavigationLeft = () => {
                       isActive('avalanche') ||
                       isActive('linea') ||
                       isActive('metis')
-                      ? 'active'
-                      : ''
-                      }`}
+                        ? 'active'
+                        : ''
+                    }`}
                   >
                     <div className="icon">{templatesIcon}</div>
                   </div>
@@ -835,53 +828,61 @@ export const DesktopNavigationLeft = () => {
                 </div>
               </div> */}
 
-
               <div className="menu">
-                {menuData.map((menuItem, index) => (
-                  <div key={menuItem.title}>
-                    {menuItem.href ? (
-                      <Link
-                        className={`item ${isActive(menuItem.href) ? 'active' : ''}`}
-                        href={menuItem.href}
-                      >
-                        <div className="icon">{menuItem.icon}</div>
-                        <span className="bag">{isActive(menuItem.href) ? visible_bag : null}</span>
-                      </Link>
-                    ) : (
-                      <div
-                        className={`item parentItem ${menuItem.children ? 'hasChildren' : ''} ${openChildrenPc[index] || activeIndex === index ? 'active' : ''
-                          }`}
-                        onMouseEnter={() => toggleSubMenu(index)}
-                        onMouseLeave={() => toggleSubMenu(index)}
-                      >
+                {menuData.map((menuItem, index) => {
+                  const isParentActive =
+                    menuItem.children && menuItem.children.some((childItem) => isActive(childItem.href));
+                  const isParentIndexActive = index === activeParentIndex;
+                  const isParentSelected = isParentActive || isParentIndexActive;
+                  return (
+                    <React.Fragment key={index}>
+                      {menuItem.href ? (
+                        <Link className={`item ${isActive(menuItem.href) ? 'active' : ''}`} href={menuItem.href}>
+                          <div className="icon">{menuItem.icon}</div>
+                          {menuItem.title === 'home' && router.asPath === '/' ? (
+                            <span className="bag">{visible_bag}</span>
+                          ) : null}
+                        </Link>
+                      ) : (
                         <div
-                          className={`icon ${menuItem.children ? 'hasChildren' : ''} ${openChildrenPc[index] || activeIndex === index ? 'active' : ''
-                            }`}
+                          className={`hasChildBox ${isParentSelected ? 'active' : ''}`}
+                          onMouseEnter={() => {
+                            setActiveParentIndex(index);
+                          }}
+                          onMouseLeave={() => {
+                            setActiveParentIndex(null);
+                            setActiveChildIndex(null);
+                          }}
                         >
-                          {menuItem.icon}
-                          <span className="bag">{openChildrenPc[index] || activeIndex === index ? visible_bag : null}</span>
-                        </div>
-                        {menuItem.children && openChildrenPc[index] && (
-                          <div className="childBox">
-                            {menuItem.children.map((childItem, childIndex) => (
-                              <Link
-                                key={childItem.title}
-                                className={`item child-item ${isActive(childItem.href) ? 'active' : ''}`}
-                                href={childItem.href}
-                                onClick={() => handleChildItemClick(index)}
-                              >
-                                {childItem.title}
-                              </Link>
-                            ))}
+                          <div className={`item ${isParentSelected ? 'active' : ''}`}>
+                            <div className="icon">{menuItem.icon}</div>
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                          {menuItem.children && isParentSelected && (
+                            <div className={`childBox ${isParentSelected ? 'active' : ''}`}>
+                              {menuItem.children.map((childItem, childIndex) => (
+                                <Link
+                                  key={childIndex}
+                                  className={`item child-item ${isActive(childItem.href) ? 'active' : ''}`}
+                                  href={childItem.href}
+                                  onMouseEnter={() => {
+                                    setActiveChildIndex(childIndex);
+                                  }}
+                                  onMouseLeave={() => {
+                                    setActiveChildIndex(null);
+                                  }}
+                                >
+                                  {childItem.title}
+                                  {childItem.new ? <span className="newIcon">{newIcon}</span> : null}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
-
-
             </div>
           ) : (
             <div>
@@ -1030,7 +1031,6 @@ export const DesktopNavigationLeft = () => {
                 </div>
               </div> */}
 
-
               <div className="menu">
                 {menuData.map((menuItem, index) => (
                   <div key={menuItem.title}>
@@ -1038,16 +1038,26 @@ export const DesktopNavigationLeft = () => {
                       <Link className={`item ${isActive(menuItem.href) ? 'active' : ''}`} href={menuItem.href}>
                         <div className={`icon ${isActive(menuItem.href) ? 'active' : ''}`}>{menuItem.icon}</div>
                         {menuItem.title}
-                        {!menuItem.children && isActive(menuItem.href) && (
-                          <span className="bag">{visible_bag}</span>
-                        )}
+                        {!menuItem.children && isActive(menuItem.href) && <span className="bag">{visible_bag}</span>}
                       </Link>
                     ) : (
                       <div
                         onClick={() => toggleSubMenu(index)}
-                        className={`item parentItem ${menuItem.children && menuItem.children.some(childItem => isActive(childItem.href)) ? 'active' : ''}`}
+                        className={`item parentItem ${
+                          menuItem.children && menuItem.children.some((childItem) => isActive(childItem.href))
+                            ? 'active'
+                            : ''
+                        }`}
                       >
-                        <div className={`icon ${menuItem.children && menuItem.children.some(childItem => isActive(childItem.href)) ? 'active' : ''}`}>{menuItem.icon}</div>
+                        <div
+                          className={`icon ${
+                            menuItem.children && menuItem.children.some((childItem) => isActive(childItem.href))
+                              ? 'active'
+                              : ''
+                          }`}
+                        >
+                          {menuItem.icon}
+                        </div>
                         {menuItem.title}
                         <ArrowPcIcon
                           className="arrow"
@@ -1075,9 +1085,6 @@ export const DesktopNavigationLeft = () => {
                   </div>
                 ))}
               </div>
-
-
-
             </div>
           )}
         </Container>
