@@ -4,6 +4,7 @@ export const Wrapper = styled.div`
   width: 100%;
   max-width: 1000px;
   font-family: Gantari;
+
   .frcs {
     display: flex;
     align-items: center;
