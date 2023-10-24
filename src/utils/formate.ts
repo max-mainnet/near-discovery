@@ -9,10 +9,11 @@ const formateAddress = (address: string) => {
 };
 
 const formateValue = (value: string | number, precision: number) => {
-  if (Big(value).lt(Big(10).pow(-precision))) {
+  if (Big(value).eq(0)) return '0';
+  else if (Big(value).lt(Big(10).pow(-precision))) {
     return `< ${Big(10).pow(-precision).toFixed(precision)}`;
   } else {
-    return Big(value).toFixed(precision);
+    return parseFloat(Big(value).toFixed(precision));
   }
 };
 

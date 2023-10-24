@@ -3,11 +3,17 @@ import styled, { StyledComponent } from 'styled-components';
 export const Wrapper = styled.div`
   width: 100%;
   max-width: 1000px;
-
+  font-family: Gantari;
   .frcs {
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  .fccc {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .frcs-gm {
@@ -101,11 +107,12 @@ export const PortfolioTabs = styled.div`
     background: #ebf479;
     border-radius: 2px;
   }
-  border-bottom: 1px solid #292c42;
+  border-bottom: 1px solid #332c4b;
 `;
 
 export const NetWorkTab = styled.div<{ active: boolean }>`
-  width: 152px;
+  min-width: 152px;
+  max-width: max-content;
   height: 50px;
   border-radius: 10px;
   background: #35374980;
@@ -223,8 +230,11 @@ export const HoldingTitle = styled.div`
 
 export const HoldingTable = styled.table`
   width: 100%;
-  border-radius: 16px;
   background: #181a27;
+
+  padding-bottom: 8px;
+
+  border-radius: 16px;
 
   thead {
     border-bottom: 1px solid #373a53;
@@ -302,6 +312,310 @@ export const HoldingTable = styled.table`
   }
 `;
 
+export const YourAssetsTitle = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+
+  padding: 0px 10px;
+
+  position: relative;
+
+  top: 8px;
+
+  .assets-text {
+    font-family: Gantari;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 24px;
+    letter-spacing: 0em;
+    text-align: left;
+  }
+
+  .asset-function-button {
+    border: 1px solid #373a53;
+    background: #373a53;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 100%;
+    background: #c7cdff;
+  }
+`;
+
 export const SortArrowDownWrapper = styled.div<{ active: boolean }>`
   color: ${(p) => (p.active ? '#7C7F96' : '#373A53')};
+`;
+
+export const ProtocolSelectBox = styled.div`
+  width: 238px;
+  background: #303142;
+  padding: 10px 16px;
+  font-family: Gantari;
+  font-size: 16px;
+  font-weight: 400;
+  border-radius: 12px;
+  line-height: 15px;
+  letter-spacing: 0em;
+  text-align: left;
+  cursor: default;
+  position: absolute;
+  right: 0;
+  top: 32px;
+
+  z-index: 100;
+
+  .function-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .minimum-value-box {
+    background: linear-gradient(0deg, rgba(11, 12, 19, 1), rgba(11, 12, 19, 1)), linear-gradient(0deg, #373a53, #373a53);
+    border: 1px solid #373a53;
+    padding: 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+`;
+
+export const CheckBox = styled.div<{ active: boolean }>`
+  width: 35px;
+  height: 20px;
+
+  position: relative;
+  border-radius: 25px;
+  border: 1px solid #2c2f4b;
+  background: rgba(235, 244, 121, ${(p) => (p.active ? 1 : 0.5)});
+
+  > div {
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid #2c2f4b;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 1px;
+    background: linear-gradient(0deg, #373a53, #373a53);
+
+    border-radius: 100%;
+
+    transform: ${(p) => (p.active ? 'translateX(80%)' : 'none')};
+  }
+`;
+
+export const ProtocolArrowWrapper = styled.div<{ isExpand: boolean }>`
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  background: ${(p) => (p.isExpand ? '#373a53' : 'none')};
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #373a53;
+  transform: ${(p) => (p.isExpand ? 'rotate(180deg)' : 'none')};
+`;
+
+export const ProtocolCard = styled.div`
+  max-width: 1000px;
+  width: 100%;
+  border: 1px solid #332c4b;
+  border-radius: 16px;
+  background: linear-gradient(0deg, #181a27, #181a27);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  .protocol-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .title-filed {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .icon-filed {
+        position: relative;
+
+        .protocol-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 100%;
+          position: relative;
+        }
+
+        .chain-icon {
+          position: absolute;
+          height: 16px;
+          width: 16px;
+          right: -4px;
+          bottom: -4px;
+        }
+      }
+
+      .protocol-name {
+        font-family: Gantari;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 22px;
+        letter-spacing: 0em;
+        text-align: left;
+      }
+
+      .chain-name {
+        font-family: Gantari;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 16px;
+        letter-spacing: 0em;
+        text-align: left;
+        color: #7c7f96;
+      }
+    }
+
+    .value-filed {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      .value {
+        font-family: Gantari;
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 22px;
+        letter-spacing: 0em;
+      }
+    }
+  }
+`;
+
+export const ProtocolTable = styled.div<{ titleColor: string; titleBg: string }>`
+  background: #25283a;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  font-size: 14px;
+
+  position: relative;
+
+  .token-series {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 250px;
+  }
+
+  .symbo-series {
+    /* max-width: 25%; */
+    display: flex;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+
+  .reward-item {
+    font-size: 14px;
+  }
+
+  .balance-value {
+    span {
+      white-space: nowrap;
+
+      font-size: 14px;
+    }
+  }
+
+  .type-title {
+    /* position: absolute; */
+
+    width: max-content;
+    padding: 20px 20px 10px 30px;
+
+    position: relative;
+
+    right: 10px;
+    bottom: 10px;
+
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 18px;
+    letter-spacing: 0em;
+    text-align: left;
+    color: ${(p) => p.titleColor};
+    background: ${(p) => p.titleBg};
+  }
+
+  table {
+    width: 100%;
+
+    .token-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 100%;
+    }
+    thead th {
+      padding: 12px 0px;
+      font-family: Gantari;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 17px;
+      letter-spacing: 0em;
+      text-align: left;
+      color: #7c7f96;
+      white-space: nowrap;
+    }
+
+    thead {
+      border-bottom: 1px solid #373a53;
+    }
+
+    thead th:first-child {
+      padding-left: 16px;
+    }
+
+    thead th:last-child {
+      padding-right: 16px;
+      text-align: right;
+    }
+
+    tbody tr td:first-child {
+      padding-left: 16px;
+    }
+
+    tbody tr td {
+      padding: 16px 0px;
+      /* max-width: 330px; */
+    }
+
+    thead th:last-child {
+      padding-right: 16px;
+      text-align: right;
+    }
+
+    tbody tr td:last-child {
+      text-align: right;
+      padding-right: 16px;
+    }
+  }
+`;
+
+export const ProtocolBalanceFiled = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;

@@ -1,24 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import styled from 'styled-components';
-
-import { useDefaultLayout } from '@/hooks/useLayout';
-import type { NextPageWithLayout } from '@/utils/types';
-
-import { ethers } from 'ethers';
+import React, { useState, useEffect } from 'react';
+import { Wallet, ethers } from 'ethers';
 import { useEthersProviderContext } from '@/data/web3';
+import { useDefaultLayout } from '@/hooks/useLayout';
 import useEthersSender from '@/hooks/useEthersSender';
-
 import Big from 'big.js';
-
 import {
   DefaultProfileIcon,
   MetaMaskIcon,
   ArrowDone,
   AllNetWorkIcon,
   sortArrowDown,
+  ProtocolArrowDown,
 } from '@/components/portfolio/imgs';
-
 import {
   Wrapper,
   Profile,
@@ -29,113 +22,48 @@ import {
   HoldingTitle,
   HoldingTable,
   SortArrowDownWrapper,
+  YourAssetsTitle,
+  ProtocolSelectBox,
+  CheckBox,
+  ProtocolCard,
+  ProtocolArrowWrapper,
+  ProtocolTable,
 } from '@/components/portfolio';
-
+import type { NextPageWithLayout } from '@/utils/types';
 import { formateAddress, formateValue } from '@/utils/formate';
+import { IconSeries } from '@/components/portfolio/icons';
 
-const PortfolioDailyData: NextPageWithLayout = () => {
-  const ChartContainer = styled.div`
-    color: #fff;
-    width: 425px;
-    height: 100px;
-  `;
+type colorKeyEnums = 'default' | 'Staked' | 'Deposit' | 'Liquidity Pool' | 'Lending';
 
-  //   const [data, setData] = useState([]);
+const colorConfig = {
+  default: {
+    titleColor: '#ACFCED',
+    titleBg: 'rgba(172,252,237,0.3)',
+  },
 
-  //   useEffect(() => {
-  //     fetchData();
-  //   }, []);
+  Staked: {
+    titleColor: '#ACFCED',
+    titleBg: 'rgba(172,252,237,0.3)',
+  },
 
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await fetch('https://api.debank.com/asset/net_curve_24h?user_addr=0xc25d79fc4970479b88068ce8891ed9be5799210d');
-  //       const jsonData = await response.json();
-  //       const formattedData = jsonData.data.usd_value_list.map((item: any[]) => ({
-  //         name: new Date(item[0] * 1000).toLocaleTimeString(),
-  //         uv: item[1],
-  //       }));
-  //       setData(formattedData);
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   };
-  const data = [
-    {
-      name: 'Page A',
-      uv: 4000,
-      pv: 2400,
-      amt: 2400,
-    },
-    {
-      name: 'Page B',
-      uv: 3000,
-      pv: 1398,
-      amt: 2210,
-    },
-    {
-      name: 'Page C',
-      uv: 2000,
-      pv: 9800,
-      amt: 2290,
-    },
-    {
-      name: 'Page D',
-      uv: 2780,
-      pv: 3908,
-      amt: 2000,
-    },
-    {
-      name: 'Page E',
-      uv: 1890,
-      pv: 4800,
-      amt: 2181,
-    },
-    {
-      name: 'Page F',
-      uv: 2390,
-      pv: 3800,
-      amt: 2500,
-    },
-    {
-      name: 'Page G',
-      uv: 3490,
-      pv: 4300,
-      amt: 2100,
-    },
-  ];
+  Deposit: {
+    titleColor: '#ACFCED',
+    titleBg: 'rgba(172,252,237,0.3)',
+  },
 
-  return (
-    <ChartContainer>
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
-          width={200}
-          height={60}
-          data={data}
-          margin={{
-            top: 5,
-            right: 0,
-            left: 0,
-            bottom: 5,
-          }}
-        >
-          <defs>
-            <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#63C341" />
-              <stop offset="100%" stopColor="rgba(99, 195, 65, 0)" />
-            </linearGradient>
-          </defs>
-          <CartesianGrid stroke="transparent" />
-          <XAxis dataKey="name" tick={false} axisLine={false} tickLine={false} />
-          <YAxis axisLine={false} tick={false} tickLine={false} />
-          <Tooltip />
-          <Area type="monotone" dataKey="uv" stroke="#63C341" fill="url(#gradient)" />
-        </AreaChart>
-      </ResponsiveContainer>
-    </ChartContainer>
-  );
+  'Liquidity Pool': {
+    titleColor: '#4594FF',
+    titleBg: 'rgba(86,150,236,0.3)',
+  },
+  Lending: {
+    titleColor: '#FFBF19',
+    titleBg: 'rgba(255,191,25,0.3)',
+  },
 };
 
-const useAllTokenList = () => {
+const ChainList = ['op', 'eth', 'metis', 'era', 'bsc', 'base', 'mnt', 'avax', 'pze', 'matic', 'xdai', 'linea', 'arb'];
+
+const useAllPorfolioDataList = () => {
   const [sortBy, setSortBy] = useState<'usd_value' | 'price' | 'amount'>('usd_value');
 
   const allChainsBalance = {
@@ -834,6 +762,2030 @@ const useAllTokenList = () => {
     ],
   };
 
+  const protocolList = [
+    {
+      id: 'arb_pendle2',
+      chain: 'arb',
+      name: 'Pendle V2',
+      site_url: 'https://app.pendle.finance',
+      logo_url: 'https://static.debank.com/image/project/logo_url/pendle2/d5cfacd3b8f7e0ec161c0de9977cabbd.png',
+      has_supported_portfolio: true,
+      tvl: 52687373.149780825,
+      portfolio_item_list: [
+        {
+          stats: {
+            asset_usd_value: 1.0023615896374367,
+            debt_usd_value: 0,
+            net_usd_value: 1.0023615896374367,
+          },
+          asset_dict: {
+            '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 0.7405919109101613,
+            '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49': 0.2672551115822327,
+            '0x6694340fc020c5e6b96567843da2df01b2ce1eb6': 0.000273957796799444,
+            '0x0c880f6761f1af8d9aa9c466984b80dab9a8c9e8': 0.002658688671572035,
+          },
+          asset_token_list: [
+            {
+              id: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+              chain: 'arb',
+              name: 'Tether USD',
+              symbol: 'USDT',
+              display_symbol: null,
+              optimized_symbol: 'USDT',
+              decimals: 6,
+              logo_url: 'https://static.debank.com/image/coin/logo_url/usdt/23af7472292cb41dc39b3f1146ead0fe.png',
+              protocol_id: 'arb_rhino',
+              price: 1.000155,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1630432123.0,
+              amount: 0.7405919109101613,
+            },
+            {
+              id: '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49',
+              chain: 'arb',
+              name: 'PT Stargate USDT 27JUN2024',
+              symbol: 'PT-Stargate USDT-27JUN2024',
+              display_symbol: null,
+              optimized_symbol: 'PT-Stargate USDT-27JUN2024',
+              decimals: 6,
+              logo_url: null,
+              protocol_id: 'arb_pendle2',
+              price: 0.9704803980242734,
+              is_verified: false,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1679627765.0,
+              amount: 0.2672551115822327,
+            },
+            {
+              id: '0x6694340fc020c5e6b96567843da2df01b2ce1eb6',
+              chain: 'arb',
+              name: 'StargateToken',
+              symbol: 'STG',
+              display_symbol: null,
+              optimized_symbol: 'STG',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x6694340fc020c5e6b96567843da2df01b2ce1eb6/55886c6280173254776780fd8340cca7.png',
+              protocol_id: 'arb_stargate',
+              price: 0.4474,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1647502704.0,
+              amount: 0.000273957796799444,
+            },
+            {
+              id: '0x0c880f6761f1af8d9aa9c466984b80dab9a8c9e8',
+              chain: 'arb',
+              name: 'Pendle',
+              symbol: 'PENDLE',
+              display_symbol: null,
+              optimized_symbol: 'PENDLE',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x0c880f6761f1af8d9aa9c466984b80dab9a8c9e8/b9351f830cd0a6457e489b8c685f29ad.png',
+              protocol_id: 'arb_pendle2',
+              price: 0.814864569746244,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1671422822.0,
+              amount: 0.002658688671572035,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Liquidity Pool',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+                chain: 'arb',
+                name: 'Tether USD',
+                symbol: 'USDT',
+                display_symbol: null,
+                optimized_symbol: 'USDT',
+                decimals: 6,
+                logo_url: 'https://static.debank.com/image/coin/logo_url/usdt/23af7472292cb41dc39b3f1146ead0fe.png',
+                protocol_id: 'arb_rhino',
+                price: 1.000155,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1630432123.0,
+                amount: 0.7405919109101613,
+              },
+              {
+                id: '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49',
+                chain: 'arb',
+                name: 'PT Stargate USDT 27JUN2024',
+                symbol: 'PT-Stargate USDT-27JUN2024',
+                display_symbol: null,
+                optimized_symbol: 'PT-Stargate USDT-27JUN2024',
+                decimals: 6,
+                logo_url: null,
+                protocol_id: 'arb_pendle2',
+                price: 0.9704803980242734,
+                is_verified: false,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1679627765.0,
+                amount: 0.2672551115822327,
+              },
+            ],
+            reward_token_list: [
+              {
+                id: '0x6694340fc020c5e6b96567843da2df01b2ce1eb6',
+                chain: 'arb',
+                name: 'StargateToken',
+                symbol: 'STG',
+                display_symbol: null,
+                optimized_symbol: 'STG',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x6694340fc020c5e6b96567843da2df01b2ce1eb6/55886c6280173254776780fd8340cca7.png',
+                protocol_id: 'arb_stargate',
+                price: 0.4474,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1647502704.0,
+                amount: 0.000273957796799444,
+              },
+              {
+                id: '0x0c880f6761f1af8d9aa9c466984b80dab9a8c9e8',
+                chain: 'arb',
+                name: 'Pendle',
+                symbol: 'PENDLE',
+                display_symbol: null,
+                optimized_symbol: 'PENDLE',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x0c880f6761f1af8d9aa9c466984b80dab9a8c9e8/b9351f830cd0a6457e489b8c685f29ad.png',
+                protocol_id: 'arb_pendle2',
+                price: 0.814864569746244,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1671422822.0,
+                amount: 0.002658688671572035,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x0a21291a184cf36ad3b0a0def4a17c12cbd66a14',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_liquidity',
+            controller: '0x0a21291a184cf36ad3b0a0def4a17c12cbd66a14',
+            index: null,
+            time_at: 1679627781,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 3.010955228375076e-5,
+            debt_usd_value: 0,
+            net_usd_value: 3.010955228375076e-5,
+          },
+          asset_dict: {
+            '0x0aded315d2e51f676a2aa8d2bc6a79c88e0f1c1a': 0.000999,
+          },
+          asset_token_list: [
+            {
+              id: '0x0aded315d2e51f676a2aa8d2bc6a79c88e0f1c1a',
+              chain: 'arb',
+              name: 'YT Stargate USDT 27JUN2024',
+              symbol: 'YT-Stargate USDT-27JUN2024',
+              display_symbol: null,
+              optimized_symbol: 'YT-Stargate USDT-27JUN2024',
+              decimals: 6,
+              logo_url: null,
+              protocol_id: 'arb_pendle2',
+              price: 0.030139691975726485,
+              is_verified: false,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1679627765.0,
+              amount: 0.000999,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Deposit',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x0aded315d2e51f676a2aa8d2bc6a79c88e0f1c1a',
+                chain: 'arb',
+                name: 'YT Stargate USDT 27JUN2024',
+                symbol: 'YT-Stargate USDT-27JUN2024',
+                display_symbol: null,
+                optimized_symbol: 'YT-Stargate USDT-27JUN2024',
+                decimals: 6,
+                logo_url: null,
+                protocol_id: 'arb_pendle2',
+                price: 0.030139691975726485,
+                is_verified: false,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1679627765.0,
+                amount: 0.000999,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x0aded315d2e51f676a2aa8d2bc6a79c88e0f1c1a',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_deposited',
+            controller: '0x0aded315d2e51f676a2aa8d2bc6a79c88e0f1c1a',
+            index: null,
+            time_at: 1679627765,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 0.09572236003470927,
+            debt_usd_value: 0,
+            net_usd_value: 0.09572236003470927,
+          },
+          asset_dict: {
+            '0x1684b747cd46858ae6312a7074353d2101154ef7': 0.10001102517929267,
+          },
+          asset_token_list: [
+            {
+              id: '0x1684b747cd46858ae6312a7074353d2101154ef7',
+              chain: 'arb',
+              name: 'PT gDAI 28MAR2024',
+              symbol: 'PT-gDAI-28MAR2024',
+              display_symbol: null,
+              optimized_symbol: 'PT-gDAI-28MAR2024',
+              decimals: 18,
+              logo_url: null,
+              protocol_id: 'arb_pendle2',
+              price: 0.9571180763631312,
+              is_verified: false,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1678175030.0,
+              amount: 0.10001102517929267,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Deposit',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x1684b747cd46858ae6312a7074353d2101154ef7',
+                chain: 'arb',
+                name: 'PT gDAI 28MAR2024',
+                symbol: 'PT-gDAI-28MAR2024',
+                display_symbol: null,
+                optimized_symbol: 'PT-gDAI-28MAR2024',
+                decimals: 18,
+                logo_url: null,
+                protocol_id: 'arb_pendle2',
+                price: 0.9571180763631312,
+                is_verified: false,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1678175030.0,
+                amount: 0.10001102517929267,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x1684b747cd46858ae6312a7074353d2101154ef7',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_deposited',
+            controller: '0x1684b747cd46858ae6312a7074353d2101154ef7',
+            index: null,
+            time_at: 1678175030,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 0.9381305677579325,
+            debt_usd_value: 0,
+            net_usd_value: 0.9381305677579325,
+          },
+          asset_dict: {
+            '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f': 8.448833823811256e-6,
+            '0x82af49447d8a07e3bd95bd0d56f35241523fbab1': 0.00014569191394862938,
+            '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 0.21543311501663281,
+            '0xf97f4df75117a78c1a5a0dbb814af92458539fb4': 0.0012742551372403107,
+            '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0': 0.001397928521988464,
+            '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 0.015065826076403742,
+            '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 3.1975771628918585e-10,
+            '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 0.027647929356042458,
+            '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1': 0.027778020778710312,
+            '0xaf88d065e77c8cc2239327c5edb3a432268e5831': 0.07524883048428659,
+          },
+          asset_token_list: [
+            {
+              id: '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f',
+              chain: 'arb',
+              name: 'Wrapped BTC',
+              symbol: 'WBTC',
+              display_symbol: null,
+              optimized_symbol: 'WBTC',
+              decimals: 8,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f/d3c52e7c7449afa8bd4fad1c93f50d93.png',
+              protocol_id: '',
+              price: 34446.5,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623867469.0,
+              amount: 8.448833823811256e-6,
+            },
+            {
+              id: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+              chain: 'arb',
+              name: 'Wrapped Ether',
+              symbol: 'WETH',
+              display_symbol: null,
+              optimized_symbol: 'WETH',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x82af49447d8a07e3bd95bd0d56f35241523fbab1/61844453e63cf81301f845d7864236f6.png',
+              protocol_id: '',
+              price: 1828.93,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1622346702.0,
+              amount: 0.00014569191394862938,
+            },
+            {
+              id: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8',
+              chain: 'arb',
+              name: 'USD Coin (Arb1)',
+              symbol: 'USDC',
+              display_symbol: 'USDC(Bridged)',
+              optimized_symbol: 'USDC(Bridged)',
+              decimals: 6,
+              logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+              protocol_id: 'arb_tracer',
+              price: 1.0,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623868379.0,
+              amount: 0.21543311501663281,
+            },
+            {
+              id: '0xf97f4df75117a78c1a5a0dbb814af92458539fb4',
+              chain: 'arb',
+              name: 'ChainLink Token',
+              symbol: 'LINK',
+              display_symbol: null,
+              optimized_symbol: 'LINK',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xf97f4df75117a78c1a5a0dbb814af92458539fb4/69425617db0ef93a7c21c4f9b81c7ca5.png',
+              protocol_id: '',
+              price: 10.501624881785883,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623867040.0,
+              amount: 0.0012742551372403107,
+            },
+            {
+              id: '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0',
+              chain: 'arb',
+              name: 'Uniswap',
+              symbol: 'UNI',
+              display_symbol: null,
+              optimized_symbol: 'UNI',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0/fcee0c46fc9864f48ce6a40ed1cdd135.png',
+              protocol_id: 'arb_uniswap3',
+              price: 4.363395662983691,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623867248.0,
+              amount: 0.001397928521988464,
+            },
+            {
+              id: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+              chain: 'arb',
+              name: 'Tether USD',
+              symbol: 'USDT',
+              display_symbol: null,
+              optimized_symbol: 'USDT',
+              decimals: 6,
+              logo_url: 'https://static.debank.com/image/coin/logo_url/usdt/23af7472292cb41dc39b3f1146ead0fe.png',
+              protocol_id: 'arb_rhino',
+              price: 1.000155,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1630432123.0,
+              amount: 0.015065826076403742,
+            },
+            {
+              id: '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a',
+              chain: 'arb',
+              name: 'Magic Internet Money',
+              symbol: 'MIM',
+              display_symbol: null,
+              optimized_symbol: 'MIM',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a/7d0c0fb6eab1b7a8a9bfb7dcc04cb11e.png',
+              protocol_id: 'arb_multichain',
+              price: 0.9975207468554901,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1631595191.0,
+              amount: 3.1975771628918585e-10,
+            },
+            {
+              id: '0x17fc002b466eec40dae837fc4be5c67993ddbd6f',
+              chain: 'arb',
+              name: 'Frax',
+              symbol: 'FRAX',
+              display_symbol: null,
+              optimized_symbol: 'FRAX',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x17fc002b466eec40dae837fc4be5c67993ddbd6f/4f323e33bfffa864c577e7bd2a3257c9.png',
+              protocol_id: 'arb_frax',
+              price: 0.9993261061309677,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1632766868.0,
+              amount: 0.027647929356042458,
+            },
+            {
+              id: '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1',
+              chain: 'arb',
+              name: 'Dai Stablecoin',
+              symbol: 'DAI',
+              display_symbol: null,
+              optimized_symbol: 'DAI',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xda10009cbd5d07dd0cecc66161fc93d7c9000da1/549c4205dbb199f1b8b03af783f35e71.png',
+              protocol_id: '',
+              price: 0.99995,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1632133487.0,
+              amount: 0.027778020778710312,
+            },
+            {
+              id: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+              chain: 'arb',
+              name: 'USD Coin',
+              symbol: 'USDC',
+              display_symbol: null,
+              optimized_symbol: 'USDC',
+              decimals: 6,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xaf88d065e77c8cc2239327c5edb3a432268e5831/fffcd27b9efff5a86ab942084c05924d.png',
+              protocol_id: '',
+              price: 1.0,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1667248932.0,
+              amount: 0.07524883048428659,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Staked',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f',
+                chain: 'arb',
+                name: 'Wrapped BTC',
+                symbol: 'WBTC',
+                display_symbol: null,
+                optimized_symbol: 'WBTC',
+                decimals: 8,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f/d3c52e7c7449afa8bd4fad1c93f50d93.png',
+                protocol_id: '',
+                price: 34446.5,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623867469.0,
+                amount: 8.448833823811256e-6,
+              },
+              {
+                id: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+                chain: 'arb',
+                name: 'Wrapped Ether',
+                symbol: 'WETH',
+                display_symbol: null,
+                optimized_symbol: 'WETH',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x82af49447d8a07e3bd95bd0d56f35241523fbab1/61844453e63cf81301f845d7864236f6.png',
+                protocol_id: '',
+                price: 1828.93,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1622346702.0,
+                amount: 0.00014569191394862938,
+              },
+              {
+                id: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8',
+                chain: 'arb',
+                name: 'USD Coin (Arb1)',
+                symbol: 'USDC',
+                display_symbol: 'USDC(Bridged)',
+                optimized_symbol: 'USDC(Bridged)',
+                decimals: 6,
+                logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+                protocol_id: 'arb_tracer',
+                price: 1.0,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623868379.0,
+                amount: 0.21543311501663281,
+              },
+              {
+                id: '0xf97f4df75117a78c1a5a0dbb814af92458539fb4',
+                chain: 'arb',
+                name: 'ChainLink Token',
+                symbol: 'LINK',
+                display_symbol: null,
+                optimized_symbol: 'LINK',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xf97f4df75117a78c1a5a0dbb814af92458539fb4/69425617db0ef93a7c21c4f9b81c7ca5.png',
+                protocol_id: '',
+                price: 10.501624881785883,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623867040.0,
+                amount: 0.0012742551372403107,
+              },
+              {
+                id: '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0',
+                chain: 'arb',
+                name: 'Uniswap',
+                symbol: 'UNI',
+                display_symbol: null,
+                optimized_symbol: 'UNI',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0/fcee0c46fc9864f48ce6a40ed1cdd135.png',
+                protocol_id: 'arb_uniswap3',
+                price: 4.363395662983691,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623867248.0,
+                amount: 0.001397928521988464,
+              },
+              {
+                id: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+                chain: 'arb',
+                name: 'Tether USD',
+                symbol: 'USDT',
+                display_symbol: null,
+                optimized_symbol: 'USDT',
+                decimals: 6,
+                logo_url: 'https://static.debank.com/image/coin/logo_url/usdt/23af7472292cb41dc39b3f1146ead0fe.png',
+                protocol_id: 'arb_rhino',
+                price: 1.000155,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1630432123.0,
+                amount: 0.015065826076403742,
+              },
+              {
+                id: '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a',
+                chain: 'arb',
+                name: 'Magic Internet Money',
+                symbol: 'MIM',
+                display_symbol: null,
+                optimized_symbol: 'MIM',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a/7d0c0fb6eab1b7a8a9bfb7dcc04cb11e.png',
+                protocol_id: 'arb_multichain',
+                price: 0.9975207468554901,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1631595191.0,
+                amount: 3.1975771628918585e-10,
+              },
+              {
+                id: '0x17fc002b466eec40dae837fc4be5c67993ddbd6f',
+                chain: 'arb',
+                name: 'Frax',
+                symbol: 'FRAX',
+                display_symbol: null,
+                optimized_symbol: 'FRAX',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x17fc002b466eec40dae837fc4be5c67993ddbd6f/4f323e33bfffa864c577e7bd2a3257c9.png',
+                protocol_id: 'arb_frax',
+                price: 0.9993261061309677,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1632766868.0,
+                amount: 0.027647929356042458,
+              },
+              {
+                id: '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1',
+                chain: 'arb',
+                name: 'Dai Stablecoin',
+                symbol: 'DAI',
+                display_symbol: null,
+                optimized_symbol: 'DAI',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xda10009cbd5d07dd0cecc66161fc93d7c9000da1/549c4205dbb199f1b8b03af783f35e71.png',
+                protocol_id: '',
+                price: 0.99995,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1632133487.0,
+                amount: 0.027778020778710312,
+              },
+              {
+                id: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+                chain: 'arb',
+                name: 'USD Coin',
+                symbol: 'USDC',
+                display_symbol: null,
+                optimized_symbol: 'USDC',
+                decimals: 6,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xaf88d065e77c8cc2239327c5edb3a432268e5831/fffcd27b9efff5a86ab942084c05924d.png',
+                protocol_id: '',
+                price: 1.0,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1667248932.0,
+                amount: 0.07524883048428659,
+              },
+            ],
+            description: 'SY GLP',
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x2066a650af4b6895f72e618587aad5e8120b7790',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'token_parse_staked_adapter',
+            controller: '0x2066a650af4b6895f72e618587aad5e8120b7790',
+            index: null,
+            time_at: 1676971138,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 0.00428288850776904,
+            debt_usd_value: 0,
+            net_usd_value: 0.00428288850776904,
+          },
+          asset_dict: {
+            '0x4a8e64c3a66ce0830e3bf2ea7863b013aa592114': 0.10001102517929267,
+          },
+          asset_token_list: [
+            {
+              id: '0x4a8e64c3a66ce0830e3bf2ea7863b013aa592114',
+              chain: 'arb',
+              name: 'YT gDAI 28MAR2024',
+              symbol: 'YT-gDAI-28MAR2024',
+              display_symbol: null,
+              optimized_symbol: 'YT-gDAI-28MAR2024',
+              decimals: 18,
+              logo_url: null,
+              protocol_id: 'arb_pendle2',
+              price: 0.04282416363686885,
+              is_verified: false,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1678175030.0,
+              amount: 0.10001102517929267,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Deposit',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x4a8e64c3a66ce0830e3bf2ea7863b013aa592114',
+                chain: 'arb',
+                name: 'YT gDAI 28MAR2024',
+                symbol: 'YT-gDAI-28MAR2024',
+                display_symbol: null,
+                optimized_symbol: 'YT-gDAI-28MAR2024',
+                decimals: 18,
+                logo_url: null,
+                protocol_id: 'arb_pendle2',
+                price: 0.04282416363686885,
+                is_verified: false,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1678175030.0,
+                amount: 0.10001102517929267,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x4a8e64c3a66ce0830e3bf2ea7863b013aa592114',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_deposited',
+            controller: '0x4a8e64c3a66ce0830e3bf2ea7863b013aa592114',
+            index: null,
+            time_at: 1678175030,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 0.14575172856998997,
+            debt_usd_value: 0,
+            net_usd_value: 0.14575172856998997,
+          },
+          asset_dict: {
+            '0x56051f8e46b67b4d286454995dbc6f5f3c433e34': 2.8931625033402963,
+          },
+          asset_token_list: [
+            {
+              id: '0x56051f8e46b67b4d286454995dbc6f5f3c433e34',
+              chain: 'arb',
+              name: 'YT GLP 28MAR2024',
+              symbol: 'YT-GLP-28MAR2024',
+              display_symbol: null,
+              optimized_symbol: 'YT-GLP-28MAR2024',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x56051f8e46b67b4d286454995dbc6f5f3c433e34/bdc797feb424aa9f05436df00303e87b.png',
+              protocol_id: 'arb_pendle2',
+              price: 0.050377995844240527,
+              is_verified: true,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1676971227.0,
+              amount: 2.8931625033402963,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Deposit',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x56051f8e46b67b4d286454995dbc6f5f3c433e34',
+                chain: 'arb',
+                name: 'YT GLP 28MAR2024',
+                symbol: 'YT-GLP-28MAR2024',
+                display_symbol: null,
+                optimized_symbol: 'YT-GLP-28MAR2024',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x56051f8e46b67b4d286454995dbc6f5f3c433e34/bdc797feb424aa9f05436df00303e87b.png',
+                protocol_id: 'arb_pendle2',
+                price: 0.050377995844240527,
+                is_verified: true,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1676971227.0,
+                amount: 2.8931625033402963,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x56051f8e46b67b4d286454995dbc6f5f3c433e34',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_deposited',
+            controller: '0x56051f8e46b67b4d286454995dbc6f5f3c433e34',
+            index: null,
+            time_at: 1676971227,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 0.8389133409445206,
+            debt_usd_value: 0,
+            net_usd_value: 0.8389133409445206,
+          },
+          asset_dict: {
+            '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49': 0.864431,
+          },
+          asset_token_list: [
+            {
+              id: '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49',
+              chain: 'arb',
+              name: 'PT Stargate USDT 27JUN2024',
+              symbol: 'PT-Stargate USDT-27JUN2024',
+              display_symbol: null,
+              optimized_symbol: 'PT-Stargate USDT-27JUN2024',
+              decimals: 6,
+              logo_url: null,
+              protocol_id: 'arb_pendle2',
+              price: 0.9704803980242734,
+              is_verified: false,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1679627765.0,
+              amount: 0.864431,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Deposit',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49',
+                chain: 'arb',
+                name: 'PT Stargate USDT 27JUN2024',
+                symbol: 'PT-Stargate USDT-27JUN2024',
+                display_symbol: null,
+                optimized_symbol: 'PT-Stargate USDT-27JUN2024',
+                decimals: 6,
+                logo_url: null,
+                protocol_id: 'arb_pendle2',
+                price: 0.9704803980242734,
+                is_verified: false,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1679627765.0,
+                amount: 0.864431,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_deposited',
+            controller: '0x7d180a4f451fc15b543b5d1ba7dda6b3014a4c49',
+            index: null,
+            time_at: 1679627765,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 0.08794482704192781,
+            debt_usd_value: 0,
+            net_usd_value: 0.08794482704192781,
+          },
+          asset_dict: {
+            '0x96015d0fb97139567a9ba675951816a0bb719e3c': 0.08849849973146062,
+          },
+          asset_token_list: [
+            {
+              id: '0x96015d0fb97139567a9ba675951816a0bb719e3c',
+              chain: 'arb',
+              name: 'PT GLP 28MAR2024',
+              symbol: 'PT-GLP-28MAR2024',
+              display_symbol: null,
+              optimized_symbol: 'PT-GLP-28MAR2024',
+              decimals: 18,
+              logo_url: null,
+              protocol_id: 'arb_pendle2',
+              price: 0.9937437053598324,
+              is_verified: false,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1676971227.0,
+              amount: 0.08849849973146062,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Deposit',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x96015d0fb97139567a9ba675951816a0bb719e3c',
+                chain: 'arb',
+                name: 'PT GLP 28MAR2024',
+                symbol: 'PT-GLP-28MAR2024',
+                display_symbol: null,
+                optimized_symbol: 'PT-GLP-28MAR2024',
+                decimals: 18,
+                logo_url: null,
+                protocol_id: 'arb_pendle2',
+                price: 0.9937437053598324,
+                is_verified: false,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1676971227.0,
+                amount: 0.08849849973146062,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x96015d0fb97139567a9ba675951816a0bb719e3c',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_deposited',
+            controller: '0x96015d0fb97139567a9ba675951816a0bb719e3c',
+            index: null,
+            time_at: 1676971227,
+          },
+        },
+        {
+          stats: {
+            asset_usd_value: 1.1584852855617316,
+            debt_usd_value: 0,
+            net_usd_value: 1.1584852855617316,
+          },
+          asset_dict: {
+            '0xbb33e51bdc598d710ff59fdf523e80ab7c882c83': 0.000637495251067499,
+          },
+          asset_token_list: [
+            {
+              id: '0xbb33e51bdc598d710ff59fdf523e80ab7c882c83',
+              chain: 'arb',
+              name: 'PT wstETH 28DEC2023',
+              symbol: 'PT-wstETH-28DEC2023',
+              display_symbol: null,
+              optimized_symbol: 'PT-wstETH-28DEC2023',
+              decimals: 18,
+              logo_url: null,
+              protocol_id: 'arb_pendle2',
+              price: 1817.2453577055264,
+              is_verified: false,
+              is_core: false,
+              is_wallet: false,
+              time_at: 1689662350.0,
+              amount: 0.000637495251067499,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Deposit',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0xbb33e51bdc598d710ff59fdf523e80ab7c882c83',
+                chain: 'arb',
+                name: 'PT wstETH 28DEC2023',
+                symbol: 'PT-wstETH-28DEC2023',
+                display_symbol: null,
+                optimized_symbol: 'PT-wstETH-28DEC2023',
+                decimals: 18,
+                logo_url: null,
+                protocol_id: 'arb_pendle2',
+                price: 1817.2453577055264,
+                is_verified: false,
+                is_core: false,
+                is_wallet: false,
+                time_at: 1689662350.0,
+                amount: 0.000637495251067499,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0xbb33e51bdc598d710ff59fdf523e80ab7c882c83',
+            chain: 'arb',
+            project_id: 'arb_pendle2',
+            adapter_id: 'pendle_deposited',
+            controller: '0xbb33e51bdc598d710ff59fdf523e80ab7c882c83',
+            index: null,
+            time_at: 1689662350,
+          },
+        },
+      ],
+    },
+    {
+      id: 'arb_gmx',
+      chain: 'arb',
+      name: 'GMX',
+      site_url: 'https://gmx.io',
+      logo_url: 'https://static.debank.com/image/project/logo_url/arb_gmx/1a57f390512f4fe108c2b7155dc1fb6d.png',
+      has_supported_portfolio: true,
+      tvl: 641337556.6514765,
+      portfolio_item_list: [
+        {
+          stats: {
+            asset_usd_value: 0.15361496640448216,
+            debt_usd_value: 0,
+            net_usd_value: 0.15361496640448216,
+          },
+          asset_dict: {
+            '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f': 1.3764352455953654e-6,
+            '0x82af49447d8a07e3bd95bd0d56f35241523fbab1': 2.3767711848953198e-5,
+            '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 0.0351551304851353,
+            '0xf97f4df75117a78c1a5a0dbb814af92458539fb4': 0.00020330969096359143,
+            '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0': 0.00022804703725569223,
+            '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': 0.0024620277764086096,
+            '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a': 5.218753217891915e-11,
+            '0x17fc002b466eec40dae837fc4be5c67993ddbd6f': 0.004523962322485713,
+            '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1': 0.004533855685358674,
+            '0xaf88d065e77c8cc2239327c5edb3a432268e5831': 0.012268090431372893,
+            '0xf42ae1d54fd613c9bb14810b0588faaa09a426ca': 0.0,
+            arb: 3.61847593215e-7,
+          },
+          asset_token_list: [
+            {
+              id: '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f',
+              chain: 'arb',
+              name: 'Wrapped BTC',
+              symbol: 'WBTC',
+              display_symbol: null,
+              optimized_symbol: 'WBTC',
+              decimals: 8,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f/d3c52e7c7449afa8bd4fad1c93f50d93.png',
+              protocol_id: '',
+              price: 34446.5,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623867469.0,
+              amount: 1.3764352455953654e-6,
+            },
+            {
+              id: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+              chain: 'arb',
+              name: 'Wrapped Ether',
+              symbol: 'WETH',
+              display_symbol: null,
+              optimized_symbol: 'WETH',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x82af49447d8a07e3bd95bd0d56f35241523fbab1/61844453e63cf81301f845d7864236f6.png',
+              protocol_id: '',
+              price: 1828.93,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1622346702.0,
+              amount: 2.3767711848953198e-5,
+            },
+            {
+              id: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8',
+              chain: 'arb',
+              name: 'USD Coin (Arb1)',
+              symbol: 'USDC',
+              display_symbol: 'USDC(Bridged)',
+              optimized_symbol: 'USDC(Bridged)',
+              decimals: 6,
+              logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+              protocol_id: 'arb_tracer',
+              price: 1.0,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623868379.0,
+              amount: 0.0351551304851353,
+            },
+            {
+              id: '0xf97f4df75117a78c1a5a0dbb814af92458539fb4',
+              chain: 'arb',
+              name: 'ChainLink Token',
+              symbol: 'LINK',
+              display_symbol: null,
+              optimized_symbol: 'LINK',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xf97f4df75117a78c1a5a0dbb814af92458539fb4/69425617db0ef93a7c21c4f9b81c7ca5.png',
+              protocol_id: '',
+              price: 10.501624881785883,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623867040.0,
+              amount: 0.00020330969096359143,
+            },
+            {
+              id: '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0',
+              chain: 'arb',
+              name: 'Uniswap',
+              symbol: 'UNI',
+              display_symbol: null,
+              optimized_symbol: 'UNI',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0/fcee0c46fc9864f48ce6a40ed1cdd135.png',
+              protocol_id: 'arb_uniswap3',
+              price: 4.363395662983691,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623867248.0,
+              amount: 0.00022804703725569223,
+            },
+            {
+              id: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+              chain: 'arb',
+              name: 'Tether USD',
+              symbol: 'USDT',
+              display_symbol: null,
+              optimized_symbol: 'USDT',
+              decimals: 6,
+              logo_url: 'https://static.debank.com/image/coin/logo_url/usdt/23af7472292cb41dc39b3f1146ead0fe.png',
+              protocol_id: 'arb_rhino',
+              price: 1.000155,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1630432123.0,
+              amount: 0.0024620277764086096,
+            },
+            {
+              id: '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a',
+              chain: 'arb',
+              name: 'Magic Internet Money',
+              symbol: 'MIM',
+              display_symbol: null,
+              optimized_symbol: 'MIM',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a/7d0c0fb6eab1b7a8a9bfb7dcc04cb11e.png',
+              protocol_id: 'arb_multichain',
+              price: 0.9975207468554901,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1631595191.0,
+              amount: 5.218753217891915e-11,
+            },
+            {
+              id: '0x17fc002b466eec40dae837fc4be5c67993ddbd6f',
+              chain: 'arb',
+              name: 'Frax',
+              symbol: 'FRAX',
+              display_symbol: null,
+              optimized_symbol: 'FRAX',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0x17fc002b466eec40dae837fc4be5c67993ddbd6f/4f323e33bfffa864c577e7bd2a3257c9.png',
+              protocol_id: 'arb_frax',
+              price: 0.9993261061309677,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1632766868.0,
+              amount: 0.004523962322485713,
+            },
+            {
+              id: '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1',
+              chain: 'arb',
+              name: 'Dai Stablecoin',
+              symbol: 'DAI',
+              display_symbol: null,
+              optimized_symbol: 'DAI',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xda10009cbd5d07dd0cecc66161fc93d7c9000da1/549c4205dbb199f1b8b03af783f35e71.png',
+              protocol_id: '',
+              price: 0.99995,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1632133487.0,
+              amount: 0.004533855685358674,
+            },
+            {
+              id: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+              chain: 'arb',
+              name: 'USD Coin',
+              symbol: 'USDC',
+              display_symbol: null,
+              optimized_symbol: 'USDC',
+              decimals: 6,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xaf88d065e77c8cc2239327c5edb3a432268e5831/fffcd27b9efff5a86ab942084c05924d.png',
+              protocol_id: '',
+              price: 1.0,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1667248932.0,
+              amount: 0.012268090431372893,
+            },
+            {
+              id: '0xf42ae1d54fd613c9bb14810b0588faaa09a426ca',
+              chain: 'arb',
+              name: 'Escrowed GMX',
+              symbol: 'esGMX',
+              display_symbol: null,
+              optimized_symbol: 'esGMX',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/arb_token/logo_url/0xf42ae1d54fd613c9bb14810b0588faaa09a426ca/28fd1e74e9f42ad073992bc8359a073a.png',
+              protocol_id: 'arb_gmx',
+              price: 0,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1626958493.0,
+              amount: 0.0,
+            },
+            {
+              id: 'arb',
+              chain: 'arb',
+              name: 'ETH',
+              symbol: 'ETH',
+              display_symbol: null,
+              optimized_symbol: 'ETH',
+              decimals: 18,
+              logo_url: 'https://static.debank.com/image/arb_token/logo_url/arb/d61441782d4a08a7479d54aea211679e.png',
+              protocol_id: '',
+              price: 1828.93,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1622131200.0,
+              amount: 3.61847593215e-7,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Staked',
+          detail_types: ['common'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f',
+                chain: 'arb',
+                name: 'Wrapped BTC',
+                symbol: 'WBTC',
+                display_symbol: null,
+                optimized_symbol: 'WBTC',
+                decimals: 8,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f/d3c52e7c7449afa8bd4fad1c93f50d93.png',
+                protocol_id: '',
+                price: 34446.5,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623867469.0,
+                amount: 1.3764352455953654e-6,
+              },
+              {
+                id: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+                chain: 'arb',
+                name: 'Wrapped Ether',
+                symbol: 'WETH',
+                display_symbol: null,
+                optimized_symbol: 'WETH',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x82af49447d8a07e3bd95bd0d56f35241523fbab1/61844453e63cf81301f845d7864236f6.png',
+                protocol_id: '',
+                price: 1828.93,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1622346702.0,
+                amount: 2.3767711848953198e-5,
+              },
+              {
+                id: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8',
+                chain: 'arb',
+                name: 'USD Coin (Arb1)',
+                symbol: 'USDC',
+                display_symbol: 'USDC(Bridged)',
+                optimized_symbol: 'USDC(Bridged)',
+                decimals: 6,
+                logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+                protocol_id: 'arb_tracer',
+                price: 1.0,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623868379.0,
+                amount: 0.0351551304851353,
+              },
+              {
+                id: '0xf97f4df75117a78c1a5a0dbb814af92458539fb4',
+                chain: 'arb',
+                name: 'ChainLink Token',
+                symbol: 'LINK',
+                display_symbol: null,
+                optimized_symbol: 'LINK',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xf97f4df75117a78c1a5a0dbb814af92458539fb4/69425617db0ef93a7c21c4f9b81c7ca5.png',
+                protocol_id: '',
+                price: 10.501624881785883,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623867040.0,
+                amount: 0.00020330969096359143,
+              },
+              {
+                id: '0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0',
+                chain: 'arb',
+                name: 'Uniswap',
+                symbol: 'UNI',
+                display_symbol: null,
+                optimized_symbol: 'UNI',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0/fcee0c46fc9864f48ce6a40ed1cdd135.png',
+                protocol_id: 'arb_uniswap3',
+                price: 4.363395662983691,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623867248.0,
+                amount: 0.00022804703725569223,
+              },
+              {
+                id: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+                chain: 'arb',
+                name: 'Tether USD',
+                symbol: 'USDT',
+                display_symbol: null,
+                optimized_symbol: 'USDT',
+                decimals: 6,
+                logo_url: 'https://static.debank.com/image/coin/logo_url/usdt/23af7472292cb41dc39b3f1146ead0fe.png',
+                protocol_id: 'arb_rhino',
+                price: 1.000155,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1630432123.0,
+                amount: 0.0024620277764086096,
+              },
+              {
+                id: '0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a',
+                chain: 'arb',
+                name: 'Magic Internet Money',
+                symbol: 'MIM',
+                display_symbol: null,
+                optimized_symbol: 'MIM',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xfea7a6a0b346362bf88a9e4a88416b77a57d6c2a/7d0c0fb6eab1b7a8a9bfb7dcc04cb11e.png',
+                protocol_id: 'arb_multichain',
+                price: 0.9975207468554901,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1631595191.0,
+                amount: 5.218753217891915e-11,
+              },
+              {
+                id: '0x17fc002b466eec40dae837fc4be5c67993ddbd6f',
+                chain: 'arb',
+                name: 'Frax',
+                symbol: 'FRAX',
+                display_symbol: null,
+                optimized_symbol: 'FRAX',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0x17fc002b466eec40dae837fc4be5c67993ddbd6f/4f323e33bfffa864c577e7bd2a3257c9.png',
+                protocol_id: 'arb_frax',
+                price: 0.9993261061309677,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1632766868.0,
+                amount: 0.004523962322485713,
+              },
+              {
+                id: '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1',
+                chain: 'arb',
+                name: 'Dai Stablecoin',
+                symbol: 'DAI',
+                display_symbol: null,
+                optimized_symbol: 'DAI',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xda10009cbd5d07dd0cecc66161fc93d7c9000da1/549c4205dbb199f1b8b03af783f35e71.png',
+                protocol_id: '',
+                price: 0.99995,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1632133487.0,
+                amount: 0.004533855685358674,
+              },
+              {
+                id: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+                chain: 'arb',
+                name: 'USD Coin',
+                symbol: 'USDC',
+                display_symbol: null,
+                optimized_symbol: 'USDC',
+                decimals: 6,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xaf88d065e77c8cc2239327c5edb3a432268e5831/fffcd27b9efff5a86ab942084c05924d.png',
+                protocol_id: '',
+                price: 1.0,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1667248932.0,
+                amount: 0.012268090431372893,
+              },
+            ],
+            reward_token_list: [
+              {
+                id: '0xf42ae1d54fd613c9bb14810b0588faaa09a426ca',
+                chain: 'arb',
+                name: 'Escrowed GMX',
+                symbol: 'esGMX',
+                display_symbol: null,
+                optimized_symbol: 'esGMX',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/arb_token/logo_url/0xf42ae1d54fd613c9bb14810b0588faaa09a426ca/28fd1e74e9f42ad073992bc8359a073a.png',
+                protocol_id: 'arb_gmx',
+                price: 0,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1626958493.0,
+                amount: 0.0,
+              },
+              {
+                id: 'arb',
+                chain: 'arb',
+                name: 'ETH',
+                symbol: 'ETH',
+                display_symbol: null,
+                optimized_symbol: 'ETH',
+                decimals: 18,
+                logo_url: 'https://static.debank.com/image/arb_token/logo_url/arb/d61441782d4a08a7479d54aea211679e.png',
+                protocol_id: '',
+                price: 1828.93,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1622131200.0,
+                amount: 3.61847593215e-7,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x1addd80e6039594ee970e5872d247bf0414c8903:0x4e971a87900b931ff39d1aad67697f49835400b6',
+            chain: 'arb',
+            project_id: 'arb_gmx',
+            adapter_id: 'gmx_staking',
+            controller: '0x1addd80e6039594ee970e5872d247bf0414c8903',
+            index: '0x4e971a87900b931ff39d1aad67697f49835400b6',
+            time_at: 1628757069,
+          },
+        },
+      ],
+    },
+    {
+      id: 'aave3',
+      chain: 'eth',
+      name: 'Aave V3',
+      site_url: 'https://app.aave.com',
+      logo_url: 'https://static.debank.com/image/project/logo_url/aave3/07bc2403c8c357d2317db15d64872314.png',
+      has_supported_portfolio: true,
+      tvl: 2519496441.1399055,
+      portfolio_item_list: [
+        {
+          stats: {
+            asset_usd_value: 1.110129,
+            debt_usd_value: 0.49128061947553026,
+            net_usd_value: 0.6188483805244697,
+          },
+          asset_dict: {
+            '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': 1.110129,
+            eth: -0.0001090236349370474,
+            '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f': -4.728485394832e-6,
+            '0xba100000625a3754423978a60c9317c58a424e3d': -2.38521589422e-7,
+            '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984': -0.01003244662335775,
+            '0x5a98fcbea516cf06857215779fd812ca3bef1b32': -0.004088035092993069,
+            '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72': -1.1811393e-11,
+            '0x111111111117dc0aa78b770fa6a738034120c302': -1.0677514064e-8,
+            '0x853d955acef822db058eb8505911ed77f175b99e': -1.7857002127781e-5,
+            '0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f': -0.000349146684184387,
+            '0xd33526068d116ce69f19a9ee46f0bd304f21a51f': -0.010071304391317138,
+          },
+          asset_token_list: [
+            {
+              id: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+              chain: 'eth',
+              name: 'USD Coin',
+              symbol: 'USDC',
+              display_symbol: null,
+              optimized_symbol: 'USDC',
+              decimals: 6,
+              logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+              protocol_id: '',
+              price: 1.0,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1533324504.0,
+              amount: 1.110129,
+            },
+            {
+              id: 'eth',
+              chain: 'eth',
+              name: 'ETH',
+              symbol: 'ETH',
+              display_symbol: null,
+              optimized_symbol: 'ETH',
+              decimals: 18,
+              logo_url: 'https://static.debank.com/image/token/logo_url/eth/935ae4e4d1d12d59a99717a24f2540b5.png',
+              protocol_id: '',
+              price: 1828.93,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1483200000.0,
+              amount: -0.0001090236349370474,
+            },
+            {
+              id: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
+              chain: 'eth',
+              name: 'Synthetix Network Token',
+              symbol: 'SNX',
+              display_symbol: null,
+              optimized_symbol: 'SNX',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f/fb568c26c7902169572abe8fa966e791.png',
+              protocol_id: 'synthetix',
+              price: 2.3129513571326967,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1565329008.0,
+              amount: -4.728485394832e-6,
+            },
+            {
+              id: '0xba100000625a3754423978a60c9317c58a424e3d',
+              chain: 'eth',
+              name: 'Balancer',
+              symbol: 'BAL',
+              display_symbol: null,
+              optimized_symbol: 'BAL',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0xba100000625a3754423978a60c9317c58a424e3d/52990c207f4001bd9090dfd90e54374a.png',
+              protocol_id: 'balancer',
+              price: 3.4069358355362804,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1592616779.0,
+              amount: -2.38521589422e-7,
+            },
+            {
+              id: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+              chain: 'eth',
+              name: 'Uniswap',
+              symbol: 'UNI',
+              display_symbol: null,
+              optimized_symbol: 'UNI',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984/fcee0c46fc9864f48ce6a40ed1cdd135.png',
+              protocol_id: 'uniswap3',
+              price: 4.363395662983691,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1600107086.0,
+              amount: -0.01003244662335775,
+            },
+            {
+              id: '0x5a98fcbea516cf06857215779fd812ca3bef1b32',
+              chain: 'eth',
+              name: 'Lido DAO Token',
+              symbol: 'LDO',
+              display_symbol: null,
+              optimized_symbol: 'LDO',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0x5a98fcbea516cf06857215779fd812ca3bef1b32/3a1a90da5ccd4849de3e83755f1fd8b5.png',
+              protocol_id: 'lido',
+              price: 1.7938972628184213,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1608242396.0,
+              amount: -0.004088035092993069,
+            },
+            {
+              id: '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
+              chain: 'eth',
+              name: 'Ethereum Name Service',
+              symbol: 'ENS',
+              display_symbol: null,
+              optimized_symbol: 'ENS',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0xc18360217d8f7ab5e7c516566761ea12ce7f9d72/034d454d78d7be7f9675066fdb63e114.png',
+              protocol_id: 'ens',
+              price: 7.785966691418764,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1635800117.0,
+              amount: -1.1811393e-11,
+            },
+            {
+              id: '0x111111111117dc0aa78b770fa6a738034120c302',
+              chain: 'eth',
+              name: '1INCH Token',
+              symbol: '1INCH',
+              display_symbol: null,
+              optimized_symbol: '1INCH',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0x111111111117dc0aa78b770fa6a738034120c302/2441b15b32406dc7d163ba4c1c6981d3.png',
+              protocol_id: '1inch2',
+              price: 0.2895445008029117,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1608747211.0,
+              amount: -1.0677514064e-8,
+            },
+            {
+              id: '0x853d955acef822db058eb8505911ed77f175b99e',
+              chain: 'eth',
+              name: 'Frax',
+              symbol: 'FRAX',
+              display_symbol: null,
+              optimized_symbol: 'FRAX',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0x853d955acef822db058eb8505911ed77f175b99e/4f323e33bfffa864c577e7bd2a3257c9.png',
+              protocol_id: 'frax',
+              price: 0.9996577338984929,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1608140520.0,
+              amount: -1.7857002127781e-5,
+            },
+            {
+              id: '0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f',
+              chain: 'eth',
+              name: 'Gho Token',
+              symbol: 'GHO',
+              display_symbol: null,
+              optimized_symbol: 'GHO',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f/f6cc1d86bdf590208ab77700488d25c3.png',
+              protocol_id: '',
+              price: 0.9697093667425924,
+              is_verified: false,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1689420227.0,
+              amount: -0.000349146684184387,
+            },
+            {
+              id: '0xd33526068d116ce69f19a9ee46f0bd304f21a51f',
+              chain: 'eth',
+              name: 'Rocket Pool Protocol',
+              symbol: 'RPL',
+              display_symbol: null,
+              optimized_symbol: 'RPL',
+              decimals: 18,
+              logo_url:
+                'https://static.debank.com/image/eth_token/logo_url/0xd33526068d116ce69f19a9ee46f0bd304f21a51f/0dac0c5e1dd543fb62581f0756e0b11f.png',
+              protocol_id: 'rocketpool',
+              price: 23.87047299652043,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1632980703.0,
+              amount: -0.010071304391317138,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Lending',
+          detail_types: ['lending'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+                chain: 'eth',
+                name: 'USD Coin',
+                symbol: 'USDC',
+                display_symbol: null,
+                optimized_symbol: 'USDC',
+                decimals: 6,
+                logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+                protocol_id: '',
+                price: 1.0,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1533324504.0,
+                amount: 1.110129,
+              },
+            ],
+            borrow_token_list: [
+              {
+                id: 'eth',
+                chain: 'eth',
+                name: 'ETH',
+                symbol: 'ETH',
+                display_symbol: null,
+                optimized_symbol: 'ETH',
+                decimals: 18,
+                logo_url: 'https://static.debank.com/image/token/logo_url/eth/935ae4e4d1d12d59a99717a24f2540b5.png',
+                protocol_id: '',
+                price: 1828.93,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1483200000.0,
+                amount: 0.0001090236349370474,
+              },
+              {
+                id: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
+                chain: 'eth',
+                name: 'Synthetix Network Token',
+                symbol: 'SNX',
+                display_symbol: null,
+                optimized_symbol: 'SNX',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f/fb568c26c7902169572abe8fa966e791.png',
+                protocol_id: 'synthetix',
+                price: 2.3129513571326967,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1565329008.0,
+                amount: 4.728485394832e-6,
+              },
+              {
+                id: '0xba100000625a3754423978a60c9317c58a424e3d',
+                chain: 'eth',
+                name: 'Balancer',
+                symbol: 'BAL',
+                display_symbol: null,
+                optimized_symbol: 'BAL',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0xba100000625a3754423978a60c9317c58a424e3d/52990c207f4001bd9090dfd90e54374a.png',
+                protocol_id: 'balancer',
+                price: 3.4069358355362804,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1592616779.0,
+                amount: 2.38521589422e-7,
+              },
+              {
+                id: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+                chain: 'eth',
+                name: 'Uniswap',
+                symbol: 'UNI',
+                display_symbol: null,
+                optimized_symbol: 'UNI',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984/fcee0c46fc9864f48ce6a40ed1cdd135.png',
+                protocol_id: 'uniswap3',
+                price: 4.363395662983691,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1600107086.0,
+                amount: 0.01003244662335775,
+              },
+              {
+                id: '0x5a98fcbea516cf06857215779fd812ca3bef1b32',
+                chain: 'eth',
+                name: 'Lido DAO Token',
+                symbol: 'LDO',
+                display_symbol: null,
+                optimized_symbol: 'LDO',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0x5a98fcbea516cf06857215779fd812ca3bef1b32/3a1a90da5ccd4849de3e83755f1fd8b5.png',
+                protocol_id: 'lido',
+                price: 1.7938972628184213,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1608242396.0,
+                amount: 0.004088035092993069,
+              },
+              {
+                id: '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72',
+                chain: 'eth',
+                name: 'Ethereum Name Service',
+                symbol: 'ENS',
+                display_symbol: null,
+                optimized_symbol: 'ENS',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0xc18360217d8f7ab5e7c516566761ea12ce7f9d72/034d454d78d7be7f9675066fdb63e114.png',
+                protocol_id: 'ens',
+                price: 7.785966691418764,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1635800117.0,
+                amount: 1.1811393e-11,
+              },
+              {
+                id: '0x111111111117dc0aa78b770fa6a738034120c302',
+                chain: 'eth',
+                name: '1INCH Token',
+                symbol: '1INCH',
+                display_symbol: null,
+                optimized_symbol: '1INCH',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0x111111111117dc0aa78b770fa6a738034120c302/2441b15b32406dc7d163ba4c1c6981d3.png',
+                protocol_id: '1inch2',
+                price: 0.2895445008029117,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1608747211.0,
+                amount: 1.0677514064e-8,
+              },
+              {
+                id: '0x853d955acef822db058eb8505911ed77f175b99e',
+                chain: 'eth',
+                name: 'Frax',
+                symbol: 'FRAX',
+                display_symbol: null,
+                optimized_symbol: 'FRAX',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0x853d955acef822db058eb8505911ed77f175b99e/4f323e33bfffa864c577e7bd2a3257c9.png',
+                protocol_id: 'frax',
+                price: 0.9996577338984929,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1608140520.0,
+                amount: 1.7857002127781e-5,
+              },
+              {
+                id: '0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f',
+                chain: 'eth',
+                name: 'Gho Token',
+                symbol: 'GHO',
+                display_symbol: null,
+                optimized_symbol: 'GHO',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f/f6cc1d86bdf590208ab77700488d25c3.png',
+                protocol_id: '',
+                price: 0.9697093667425924,
+                is_verified: false,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1689420227.0,
+                amount: 0.000349146684184387,
+              },
+              {
+                id: '0xd33526068d116ce69f19a9ee46f0bd304f21a51f',
+                chain: 'eth',
+                name: 'Rocket Pool Protocol',
+                symbol: 'RPL',
+                display_symbol: null,
+                optimized_symbol: 'RPL',
+                decimals: 18,
+                logo_url:
+                  'https://static.debank.com/image/eth_token/logo_url/0xd33526068d116ce69f19a9ee46f0bd304f21a51f/0dac0c5e1dd543fb62581f0756e0b11f.png',
+                protocol_id: 'rocketpool',
+                price: 23.87047299652043,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1632980703.0,
+                amount: 0.010071304391317138,
+              },
+            ],
+            health_rate: 1.8189655497314938,
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2',
+            chain: 'eth',
+            project_id: 'aave3',
+            adapter_id: 'aave3_proxy_lending',
+            controller: '0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2',
+            index: null,
+            time_at: 1672325495,
+          },
+        },
+      ],
+    },
+    {
+      id: 'arb_cream',
+      chain: 'arb',
+      name: 'Cream',
+      site_url: 'https://app.cream.finance',
+      logo_url: 'https://static.debank.com/image/project/logo_url/arb_cream/7674526d1fd388a2842be1fc7e21d26e.png',
+      has_supported_portfolio: true,
+      tvl: 8383.077869477864,
+      portfolio_item_list: [
+        {
+          stats: {
+            asset_usd_value: 0.23008420407642932,
+            debt_usd_value: 0,
+            net_usd_value: 0.23008420407642932,
+          },
+          asset_dict: {
+            '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': 0.23008420407642932,
+          },
+          asset_token_list: [
+            {
+              id: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8',
+              chain: 'arb',
+              name: 'USD Coin (Arb1)',
+              symbol: 'USDC',
+              display_symbol: 'USDC(Bridged)',
+              optimized_symbol: 'USDC(Bridged)',
+              decimals: 6,
+              logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+              protocol_id: 'arb_tracer',
+              price: 1.0,
+              is_verified: true,
+              is_core: true,
+              is_wallet: true,
+              time_at: 1623868379.0,
+              amount: 0.23008420407642932,
+            },
+          ],
+          update_at: 1698139216.0,
+          name: 'Lending',
+          detail_types: ['lending'],
+          detail: {
+            supply_token_list: [
+              {
+                id: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8',
+                chain: 'arb',
+                name: 'USD Coin (Arb1)',
+                symbol: 'USDC',
+                display_symbol: 'USDC(Bridged)',
+                optimized_symbol: 'USDC(Bridged)',
+                decimals: 6,
+                logo_url: 'https://static.debank.com/image/coin/logo_url/usdc/e87790bfe0b3f2ea855dc29069b38818.png',
+                protocol_id: 'arb_tracer',
+                price: 1.0,
+                is_verified: true,
+                is_core: true,
+                is_wallet: true,
+                time_at: 1623868379.0,
+                amount: 0.23008420407642932,
+              },
+            ],
+          },
+          proxy_detail: {},
+          pool: {
+            id: '0xbadac56c9aca307079e8b8fc699987aac89813ee',
+            chain: 'arb',
+            project_id: 'arb_cream',
+            adapter_id: 'ib_lending',
+            controller: '0xbadac56c9aca307079e8b8fc699987aac89813ee',
+            index: null,
+            time_at: 1630903214,
+          },
+        },
+      ],
+    },
+  ];
+
   const allChainList = [
     {
       id: 'eos',
@@ -1456,7 +3408,7 @@ const useAllTokenList = () => {
       wrapped_token_id: '0x826551890dc65655a0aceca109ab11abdbd7a07b',
       is_support_pre_exec: true,
     },
-  ];
+  ].filter((item) => ChainList.includes(item.id));
 
   const allChainMap = allChainList.reduce((pre, cur) => {
     return {
@@ -1464,6 +3416,8 @@ const useAllTokenList = () => {
       [cur.id]: cur,
     };
   }, {}) as any;
+
+  console.log('allChainMap: ', allChainMap);
 
   const allTokenList = [
     {
@@ -1572,22 +3526,18 @@ const useAllTokenList = () => {
   const supportedChainList: any[] = [];
 
   allChainList.forEach((chain) => {
-    const findToken = allTokenList.find((token) => {
-      return token.chain == chain.id;
+    // if (findToken || findProtocol) {
+    const this_chain_value = allChainsBalance.chain_list.find((chain_info) => {
+      return chain_info.id === chain.id;
     });
 
-    if (findToken) {
-      const this_chain_value = allChainsBalance.chain_list.find((chain_info) => {
-        return chain_info.id === chain.id;
+    if (this_chain_value) {
+      supportedChainList.push({
+        ...this_chain_value,
+        ...chain,
       });
-
-      if (this_chain_value) {
-        supportedChainList.push({
-          ...this_chain_value,
-          ...chain,
-        });
-      }
     }
+    // }
   });
 
   const totalUsdValueOfSupportedChains = supportedChainList.reduce((total, item) => total + item.usd_value, 0);
@@ -1595,7 +3545,7 @@ const useAllTokenList = () => {
   const supportedChainsWithPercentage = supportedChainList.map((chain) => {
     return {
       ...chain,
-      percentage: (chain.usd_value / totalUsdValueOfSupportedChains) * 100,
+      percentage: Big((chain.usd_value / totalUsdValueOfSupportedChains) * 100).toFixed(2),
     };
   });
 
@@ -1619,27 +3569,506 @@ const useAllTokenList = () => {
       }
     });
 
+  const parsedProtocolList = protocolList.map((protocol) => {
+    const protocolNetUsdValue = protocol.portfolio_item_list.reduce(
+      (total, item) => total + item.stats.net_usd_value,
+      0,
+    );
+
+    const protocolRewardUsdValue = protocol.portfolio_item_list.reduce((total, item) => {
+      const itemDetail = item.detail as any;
+
+      if (!itemDetail.reward_token_list) {
+        return total;
+      } else {
+        const reward_token_list = itemDetail.reward_token_list as any[];
+
+        const total_reward_this_item = reward_token_list.reduce(
+          (total, reward_item) => total + reward_item.price * reward_item.amount,
+          0,
+        );
+
+        return total + total_reward_this_item;
+      }
+    }, 0);
+
+    const protocol_usd_value = protocolNetUsdValue + protocolRewardUsdValue;
+
+    return {
+      ...protocol,
+      protocol_usd_value,
+      protocolRewardUsdValue,
+      protocolNetUsdValue,
+      chain_info: allChainMap[protocol.chain],
+    };
+  });
+
   return {
     parsedAllTokenList,
     supportedChainList: supportedChainsWithPercentage,
     allChainsBalance,
     sortBy,
     setSortBy,
+    parsedProtocolList,
+    totalUsdValueOfSupportedChains,
   };
+};
+
+const WalletComponent = (props: any) => {
+  const {
+    parsedAllTokenList,
+    supportedChainList,
+    totalUsdValueOfSupportedChains,
+    allChainsBalance,
+    setSortBy,
+    sortBy,
+    filterFunc,
+  } = props.data;
+
+  const value_all = parsedAllTokenList.filter(filterFunc).reduce((pre: any, cur: any) => {
+    return pre.plus(cur.price * cur.amount);
+  }, Big(0));
+
+  return (
+    <>
+      <HoldingTitle>
+        <div className="holding-text">Holding</div>
+
+        <div className="holding-value">${formateValue(value_all.toFixed(), 4)}</div>
+      </HoldingTitle>
+
+      <HoldingTable>
+        <thead>
+          <tr>
+            <th>Token</th>
+
+            <th>
+              <div
+                className="frcs-gm"
+                onClick={() => {
+                  setSortBy('price');
+                }}
+              >
+                <span>Price</span>{' '}
+                <SortArrowDownWrapper active={sortBy === 'price'}> {sortArrowDown} </SortArrowDownWrapper>{' '}
+              </div>{' '}
+            </th>
+
+            <th>
+              <div
+                className="frcs-gm"
+                onClick={() => {
+                  setSortBy('amount');
+                }}
+              >
+                <span>Amount</span>{' '}
+                <SortArrowDownWrapper active={sortBy === 'amount'}> {sortArrowDown} </SortArrowDownWrapper>{' '}
+              </div>{' '}
+            </th>
+
+            <th>
+              <div
+                className="frcs-gm"
+                onClick={() => {
+                  setSortBy('usd_value');
+                }}
+              >
+                <span>USD value</span>{' '}
+                <SortArrowDownWrapper active={sortBy === 'usd_value'}> {sortArrowDown} </SortArrowDownWrapper>{' '}
+              </div>{' '}
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {parsedAllTokenList.filter(filterFunc).map((token: any) => {
+            return (
+              <tr key={token.id}>
+                <td>
+                  <div className="frcs token-info">
+                    <img src={token.logo_url || ''} className="token-icon" />
+
+                    <div>
+                      <div className="token-symbol">{token.symbol}</div>
+
+                      <div className="chain-info">
+                        <img src={token.chain_info.logo_url} className="chain-icon" />
+
+                        <div className="chain-name"> {token.chain_info.name} </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>{formateValue(token.price, 2)}</td>
+                <td>{formateValue(token.amount, 4)}</td>
+                <td>${formateValue(token.usd_value, 4)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </HoldingTable>
+    </>
+  );
+};
+
+const ProtocolComponent = (props: any) => {
+  const {
+    parsedAllTokenList,
+    parsedProtocolList,
+    supportedChainList,
+    allChainsBalance,
+    setSortBy,
+    sortBy,
+    filterFunc,
+  } = props.data;
+
+  const [openOptions, setOpenOptions] = useState<boolean>(false);
+
+  const [isHide, setIsHide] = useState<boolean>(false);
+
+  const [isExpand, setIsExpand] = useState<boolean>(false);
+
+  return (
+    <>
+      <YourAssetsTitle>
+        <div className="assets-text">Your Assets & Positions</div>
+
+        <div
+          className="asset-function-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setOpenOptions((b) => !b);
+          }}
+        >
+          <div className="dot" />
+
+          <div className="dot" />
+
+          <div className="dot" />
+
+          {openOptions && (
+            <ProtocolSelectBox
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
+              <div className="function-item">
+                <div>Hide</div>
+
+                <div className="minimum-value-box">{'< $0.1'}</div>
+
+                <CheckBox active={isHide}>
+                  <div
+                    onClick={() => {
+                      setIsHide((h) => !h);
+                    }}
+                  ></div>
+                </CheckBox>
+              </div>
+
+              <div className="function-item">
+                <div>Expand</div>
+
+                <CheckBox active={isExpand}>
+                  <div
+                    onClick={() => {
+                      setIsExpand((h) => !h);
+                    }}
+                  ></div>
+                </CheckBox>
+              </div>
+            </ProtocolSelectBox>
+          )}
+        </div>
+      </YourAssetsTitle>
+
+      {parsedProtocolList.filter(filterFunc).map((protocol: any, index: number) => {
+        return (
+          <ProtocolItem
+            isHide={isHide}
+            isExpand={isExpand}
+            protocolItem={protocol}
+            key={'protocol-' + index}
+          ></ProtocolItem>
+        );
+      })}
+    </>
+  );
+};
+
+const ProtocolTableGenerator = ({
+  columns,
+  rows,
+  name,
+  showTitle,
+}: {
+  columns: string[];
+  rows: (JSX.Element | string)[][];
+  name: colorKeyEnums;
+  showTitle: boolean;
+}) => {
+  console.log('colorConfig[name]  ', colorConfig[name] || colorConfig['default']);
+
+  return (
+    <ProtocolTable
+      titleColor={(colorConfig[name] || colorConfig['default']).titleColor}
+      titleBg={(colorConfig[name] || colorConfig['default']).titleBg}
+    >
+      <div className="type-title">{name}</div>
+
+      <table>
+        <thead>
+          <tr>
+            {columns.map((column, index) => {
+              return <th key={column + index}>{column}</th>;
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => {
+            return (
+              <tr key={index + '-row-tr' + index}>
+                {row.map((item, index) => {
+                  if (item === 'omit') return <></>;
+                  return <td key={index + 'row-td'}>{item}</td>;
+                })}
+              </tr>
+            );
+          })}
+        </tbody>{' '}
+      </table>
+    </ProtocolTable>
+  );
+};
+
+const ProtocolItem = (props: any) => {
+  const { isExpand, protocolItem, isHide } = props;
+  //   console.log('protocolItem: ', protocolItem.chain_info);
+  //   console.log('protocolItem: ', protocolItem.chain_info);
+
+  const [thisCardExpand, setThisCardExpand] = useState<boolean>(false);
+
+  useEffect(() => {
+    setThisCardExpand(isExpand);
+  }, [isExpand]);
+
+  const groupedPortfolioItemList = protocolItem.portfolio_item_list.reduce((pre: any, cur: any) => {
+    const name = cur.name;
+
+    if (!pre[name]) {
+      pre[name] = [];
+    }
+
+    pre[name].push(cur);
+
+    return pre;
+  }, {});
+
+  if (!protocolItem.chain_info) return <></>;
+
+  return (
+    <ProtocolCard>
+      <div className="protocol-title">
+        <div className="title-filed">
+          <div className="icon-filed">
+            <img className="protocol-icon" src={protocolItem.logo_url} />
+            <img className="chain-icon " src={protocolItem.chain_info?.logo_url} />
+          </div>
+
+          <div>
+            <div className="protocol-name">{protocolItem.name}</div>
+
+            <div className="chain-name">{protocolItem.chain_info.name}</div>
+          </div>
+        </div>
+
+        <div className="value-filed">
+          <div>${formateValue(protocolItem.protocol_usd_value, 4)}</div>
+
+          <ProtocolArrowWrapper
+            onClick={() => {
+              setThisCardExpand((b) => !b);
+            }}
+            isExpand={thisCardExpand}
+          >
+            {ProtocolArrowDown}
+          </ProtocolArrowWrapper>
+        </div>
+      </div>
+
+      {thisCardExpand &&
+        Object.entries(groupedPortfolioItemList).map(([name, itemList]: [string, any], index: number) => {
+          const renderList = [];
+
+          if (name === 'Lending') {
+            const item = itemList[0];
+
+            const { supply_token_list, reward_token_list, borrow_token_list } = item.detail;
+
+            if (supply_token_list) {
+              renderList.push(
+                <ProtocolTableGenerator
+                  name={name}
+                  showTitle={false}
+                  columns={['Supplied', 'Balance', 'USD Value']}
+                  rows={supply_token_list.map((token: any) => {
+                    return [
+                      <div className="frcs" key={token.id}>
+                        <img className="token-icon" src={token.logo_url} />
+                        <div className="token-name">{token.name}</div>
+                      </div>,
+                      formateValue(token.amount, 4),
+                      formateValue(token.amount * token.price, 4),
+                    ];
+                  })}
+                ></ProtocolTableGenerator>,
+              );
+            }
+
+            if (reward_token_list) {
+              renderList.push(
+                <ProtocolTableGenerator
+                  name={name}
+                  showTitle={false}
+                  columns={['Rewards', 'Balance', 'USD Value']}
+                  rows={reward_token_list.map((token: any) => {
+                    return [
+                      <div className="frcs" key={token.id}>
+                        <img className="token-icon" src={token.logo_url} />
+                        <div className="token-name">{token.name}</div>
+                      </div>,
+                      formateValue(token.amount, 4),
+                      formateValue(token.amount * token.price, 4),
+                    ];
+                  })}
+                ></ProtocolTableGenerator>,
+              );
+            }
+
+            if (borrow_token_list) {
+              renderList.push(
+                <ProtocolTableGenerator
+                  name={name}
+                  showTitle={false}
+                  columns={['Borrowed', 'Balance', 'USD Value']}
+                  rows={borrow_token_list.map((token: any) => {
+                    return [
+                      <div className="frcs" key={token.id}>
+                        <img className="token-icon" src={token.logo_url} />
+                        <div className="token-name">{token.name}</div>
+                      </div>,
+                      formateValue(token.amount, 4),
+                      formateValue(token.amount * token.price, 4),
+                    ];
+                  })}
+                ></ProtocolTableGenerator>,
+              );
+            }
+          }
+
+          if (name === 'Liquidity Pool' || name === 'Staked' || name === 'Deposit') {
+            const rows = itemList.map((item: any) => {
+              const { supply_token_list, reward_token_list } = item.detail;
+
+              const tokenSeries = (
+                <div className={` ${name === 'Deposit' ? 'frcs' : 'fccc'}  token-series`}>
+                  <IconSeries ulrs={supply_token_list.map((token: any) => token.logo_url)} />
+
+                  <span className="symbo-series">
+                    {supply_token_list.map((token: any, index: number) => (
+                      <span key={'token-series-' + index}>{(index === 0 ? '' : '+') + token.symbol}</span>
+                    ))}
+                  </span>
+                </div>
+              );
+
+              const balanceList = (
+                <div className="fccc">
+                  {supply_token_list.map((token: any) => {
+                    return (
+                      <div className="frcs balance-value" key={token.id + token.chain}>
+                        <span>{formateValue(token.amount, 4)}</span>
+                        <span>{token.symbol}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+
+              const rewardList = !reward_token_list ? (
+                'omit'
+              ) : (
+                <div className="fccc">
+                  {reward_token_list.map((token: any) => {
+                    return (
+                      <div className="frcs reward-item" key={token.id + token.chain}>
+                        {`${formateValue(token.amount, 4)} ${token.symbol} $(${formateValue(
+                          token.amount * token.price,
+                          4,
+                        )})`}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+
+              const usd_value = `$${formateValue(item.stats.net_usd_value, 4)}`;
+
+              return [tokenSeries, balanceList, rewardList, usd_value];
+            });
+
+            let columns = ['Position', 'Balance', 'Rewards', 'USD value'];
+
+            // check if all rewars omit or not in rows
+
+            const allRewardsOmit = rows.every((row: any) => row[2] === 'omit');
+
+            if (allRewardsOmit) {
+              columns = ['Position', 'Balance', 'USD value'];
+            }
+
+            renderList.push(
+              <ProtocolTableGenerator
+                name={name}
+                showTitle={false}
+                columns={columns}
+                rows={rows}
+              ></ProtocolTableGenerator>,
+            );
+          }
+
+          if (renderList.length > 0) {
+            return renderList.map((renderItem: any, index: number) => {
+              return <>{renderItem}</>;
+            });
+          }
+
+          return <></>;
+        })}
+    </ProtocolCard>
+  );
 };
 
 const PortfolioPage: NextPageWithLayout = () => {
   const { sender, wallet, provider, connect } = useEthersSender();
 
-  const [CurTab, setCurTab] = useState<'Wallet' | 'Protocol'>('Wallet');
+  const [CurTab, setCurTab] = useState<'Wallet' | 'Protocol'>('Protocol');
 
   const [network, setNetwork] = useState<string>('all');
 
-  const { parsedAllTokenList, supportedChainList, allChainsBalance, setSortBy, sortBy } = useAllTokenList();
+  const data = useAllPorfolioDataList();
 
-  const value_all = parsedAllTokenList.reduce((pre, cur) => {
-    return pre.plus(cur.price * cur.amount);
-  }, Big(0));
+  const {
+    parsedAllTokenList,
+    parsedProtocolList,
+    totalUsdValueOfSupportedChains,
+    supportedChainList,
+    allChainsBalance,
+    sortBy,
+    setSortBy,
+  } = data;
 
   const filterFunc = (token: any) => {
     return network === 'all' || token.chain === network;
@@ -1692,7 +4121,7 @@ const PortfolioPage: NextPageWithLayout = () => {
 
           <div>
             <div className="network-name">All Networks</div>
-            <div className="usd-value">${formateValue(allChainsBalance.total_usd_value, 4)}</div>
+            <div className="usd-value">${formateValue(totalUsdValueOfSupportedChains, 4)}</div>
           </div>
         </AllNetWorkTab>
 
@@ -1725,82 +4154,25 @@ const PortfolioPage: NextPageWithLayout = () => {
         })}
       </NetworkTabWrapper>
 
-      <HoldingTitle>
-        <div className="holding-text">Holding</div>
+      {CurTab === 'Wallet' && (
+        <WalletComponent
+          data={{
+            ...data,
+            network,
+            filterFunc,
+          }}
+        ></WalletComponent>
+      )}
 
-        <div className="holding-value">${formateValue(value_all.toFixed(), 4)}</div>
-      </HoldingTitle>
-
-      <HoldingTable>
-        <thead>
-          <tr>
-            <th>Token</th>
-
-            <th>
-              <div
-                className="frcs-gm"
-                onClick={() => {
-                  setSortBy('price');
-                }}
-              >
-                <span>Price</span>{' '}
-                <SortArrowDownWrapper active={sortBy === 'price'}> {sortArrowDown} </SortArrowDownWrapper>{' '}
-              </div>{' '}
-            </th>
-
-            <th>
-              <div
-                className="frcs-gm"
-                onClick={() => {
-                  setSortBy('amount');
-                }}
-              >
-                <span>Amount</span>{' '}
-                <SortArrowDownWrapper active={sortBy === 'amount'}> {sortArrowDown} </SortArrowDownWrapper>{' '}
-              </div>{' '}
-            </th>
-
-            <th>
-              <div
-                className="frcs-gm"
-                onClick={() => {
-                  setSortBy('usd_value');
-                }}
-              >
-                <span>USD value</span>{' '}
-                <SortArrowDownWrapper active={sortBy === 'usd_value'}> {sortArrowDown} </SortArrowDownWrapper>{' '}
-              </div>{' '}
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {parsedAllTokenList.filter(filterFunc).map((token) => {
-            return (
-              <tr key={token.id}>
-                <td>
-                  <div className="frcs token-info">
-                    <img src={token.logo_url || ''} className="token-icon" />
-
-                    <div>
-                      <div className="token-symbol">{token.symbol}</div>
-
-                      <div className="chain-info">
-                        <img src={token.chain_info.logo_url} className="chain-icon" />
-
-                        <div className="chain-name"> {token.chain_info.name} </div>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>{formateValue(token.price, 2)}</td>
-                <td>{formateValue(token.amount, 4)}</td>
-                <td>${formateValue(token.usd_value, 4)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </HoldingTable>
+      {CurTab === 'Protocol' && (
+        <ProtocolComponent
+          data={{
+            ...data,
+            network,
+            filterFunc,
+          }}
+        ></ProtocolComponent>
+      )}
     </Wrapper>
   );
 };
